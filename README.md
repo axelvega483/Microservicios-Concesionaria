@@ -11,7 +11,7 @@ Permite gestionar vehículos, clientes, ventas y pagos mediante una arquitectura
 - Confirmación y anulación de pagos con actualización automática del saldo pendiente.  
 - Relaciones internas sólidas entre entidades de un mismo dominio (ej. `Venta` ↔ `VentaDetalle`).  
 - Uso de **DTOs** para exposición de información entre microservicios y al frontend.  
-- Modularidad y separación de responsabilidades mediante microservicios independientes: `customer-service`, `sales-service`, `payments-service`, `catalog-service`, `gateway-service` y `eureka-service`.  
+- Modularidad y separación de responsabilidades mediante microservicios independientes: `auth-service`,`customer-service`, `sales-service`, `payments-service`, `catalog-service`, `gateway-service` y `eureka-service`.  
 
 ---
 
@@ -31,7 +31,11 @@ Permite gestionar vehículos, clientes, ventas y pagos mediante una arquitectura
 ---
 
 ## 📝 Microservicios y Funcionalidades
-
+### **auth-service**
+- Gestión de usuarios (ADMIN-EMPLEADO).  
+- CRUD completo: alta, baja, edición y listado.  
+-Login 
+ 
 ### **catalog-service**
 - Gestión de vehículos disponibles en la concesionaria.  
 - CRUD completo: alta, baja, edición y listado.  
@@ -69,5 +73,3 @@ Permite gestionar vehículos, clientes, ventas y pagos mediante una arquitectura
 
 ---
 
-💡 **Nota:**  
-Actualmente el sistema **no incluye la gestión de usuarios internos ni autenticación**, para simplificar la demo de microservicios. La seguridad y `auth-service` pueden integrarse en futuras versiones sin afectar la arquitectura principal.
