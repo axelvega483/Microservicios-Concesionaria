@@ -55,7 +55,7 @@ public class authController {
     @GetMapping
     public ResponseEntity<?> listarUsuario() {
         try {
-            List<UserGetDTO> dto = userService.findAll().stream().map(MapperDto::toDTO).toList();
+            List<UserGetDTO> dto = userService.findAll();
             return new ResponseEntity<>(new ApiResponse<>("Listado de usuarios obtenidos correctamente", dto, true), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ApiResponse<>("Error: ", null, false), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -65,10 +65,9 @@ public class authController {
     @GetMapping("{id}")
     public ResponseEntity<?> obtenerUsuario(@PathVariable Integer id) {
         try {
-            User usuario = userService.findById(id).orElse(null);
+            UserGetDTO usuario = userService.findById(id).orElse(null);
             if (usuario != null) {
-                UserGetDTO dto = MapperDto.toDTO(usuario);
-                return new ResponseEntity<>(new ApiResponse<>("Usuario encontrado con éxito", dto, true), HttpStatus.OK);
+                return new ResponseEntity<>(new ApiResponse<>("Usuario encontrado con éxito", usuario, true), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(new ApiResponse<>("Usuario no encontrado", null, false), HttpStatus.NOT_FOUND);
             }
@@ -92,11 +91,10 @@ public class authController {
     @DeleteMapping("{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id) {
         try {
-            User user = userService.findById(id).orElse(null);
+            UserGetDTO user = userService.findById(id).orElse(null);
             if(user !=null){
                 userService.delete(user.getId());
-                UserGetDTO dto = MapperDto.toDTO(user);
-                return new ResponseEntity<>(new ApiResponse<>("Usuario dado de baja", dto, true), HttpStatus.OK);
+                return new ResponseEntity<>(new ApiResponse<>("Usuario dado de baja",user, true), HttpStatus.OK);
             }
             return new ResponseEntity<>(new ApiResponse<>("Usuario no encontrado: ", null, false), HttpStatus.NOT_FOUND);
         } catch (Exception e) {

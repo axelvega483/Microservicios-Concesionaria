@@ -26,6 +26,4 @@ public class UserPostDTO {
     @NotNull
     private RolUser rol;
 
-    @NotNull
-    private List<Integer> ventasId;
 }

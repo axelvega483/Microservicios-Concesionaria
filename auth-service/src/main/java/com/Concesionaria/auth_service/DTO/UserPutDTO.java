@@ -22,6 +22,5 @@ public class UserPutDTO {
 
     private Boolean activo;
 
-    private List<Integer> ventasId;
 
 }

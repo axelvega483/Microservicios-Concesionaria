@@ -11,9 +11,9 @@ import java.util.Optional;
 public interface IUserServicie {
     User save(User user);
 
-    Optional<User> findById(Integer id);
+    Optional<UserGetDTO> findById(Integer id);
 
-    List<User> findAll();
+    List<UserGetDTO> findAll();
 
     void delete(Integer id);
 

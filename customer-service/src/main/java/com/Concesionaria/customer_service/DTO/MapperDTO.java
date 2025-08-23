@@ -2,7 +2,6 @@ package com.Concesionaria.customer_service.DTO;
 
 import com.Concesionaria.customer_service.model.Cliente;
 
-import java.util.Collections;
 
 public class MapperDTO {
     public static ClienteGetDTO toDTO(Cliente cliente) {
@@ -12,7 +11,6 @@ public class MapperDTO {
         dto.setDni(cliente.getDni());
         dto.setEmail(cliente.getEmail());
         dto.setNombre(cliente.getNombre());
-        dto.setVentas(Collections.emptyList());
         return dto;
     }
 }

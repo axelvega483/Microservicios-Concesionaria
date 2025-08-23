@@ -4,10 +4,10 @@ import com.Concesionaria.customer_service.DTO.*;
 import com.Concesionaria.customer_service.model.Cliente;
 import com.Concesionaria.customer_service.repository.ClienteRepository;
 import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -30,12 +30,6 @@ public class ClienteService implements IClienteService {
             throw new EntityExistsException("El Cliente ya existe");
         }
         List<ClienteVentaDTO> ventas = Collections.emptyList();
-        if (post.getVentasId() != null && !post.getVentasId().isEmpty()) {
-            ventas = venta.obtenerVentasPorIds(post.getVentasId());
-            if (ventas.size() != post.getVentasId().size()) {
-                throw new EntityNotFoundException("Una o más ventas no existen");
-            }
-        }
         Cliente cliente = new Cliente();
         cliente.setActivo(Boolean.TRUE);
         cliente.setDni(post.getDni());
@@ -43,7 +37,6 @@ public class ClienteService implements IClienteService {
         cliente.setNombre(post.getNombre());
         Cliente saved = repo.save(cliente);
         ClienteGetDTO dto = MapperDTO.toDTO(saved);
-        dto.setVentas(ventas);
 
         return dto;
     }
@@ -56,16 +49,9 @@ public class ClienteService implements IClienteService {
 
     @Override
     public ClienteGetDTO actualizar(Integer id, ClientePutDTO put) {
-        Cliente cliente = findById(id).orElse(null);
+        Cliente cliente = repo.findById(id).orElse(null);
         if (cliente == null) {
             throw new EntityExistsException("El Cliente no existe");
-        }
-        List<ClienteVentaDTO> ventas = Collections.emptyList();
-        if (put.getVentasId() != null && !put.getVentasId().isEmpty()) {
-            ventas = venta.obtenerVentasPorIds(put.getVentasId());
-            if (ventas.size() != put.getVentasId().size()) {
-                throw new EntityNotFoundException("Una o más ventas no existen");
-            }
         }
         cliente.setActivo(Boolean.TRUE);
         cliente.setDni(put.getDni());
@@ -73,18 +59,32 @@ public class ClienteService implements IClienteService {
         cliente.setNombre(put.getNombre());
         Cliente saved = repo.save(cliente);
         ClienteGetDTO dto = MapperDTO.toDTO(saved);
-        dto.setVentas(ventas);
         return dto;
     }
 
     @Override
-    public Optional<Cliente> findById(Integer id) {
-        return repo.findById(id).filter(Cliente::getActivo);
+    public Optional<ClienteGetDTO> findById(Integer id) {
+        Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
+        if (optUser.isPresent()) {
+            ClienteGetDTO dto = MapperDTO.toDTO(optUser.get());
+            List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(dto.getId());
+            dto.setVentas(ventas);
+            return Optional.of(dto);
+        }
+        return Optional.empty();
     }
 
     @Override
-    public List<Cliente> findAll() {
-        return repo.findAll();
+    public List<ClienteGetDTO> findAll() {
+        List<Cliente> clientes = repo.findAll();
+        List<ClienteGetDTO> dtos = new ArrayList<>();
+        for (Cliente cliente : clientes) {
+            ClienteGetDTO dto = MapperDTO.toDTO(cliente);
+            List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(cliente.getId());
+            dto.setVentas(ventas);
+            dtos.add(dto);
+        }
+        return dtos;
     }
 
     @Override

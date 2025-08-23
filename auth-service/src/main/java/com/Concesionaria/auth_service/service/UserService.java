@@ -4,10 +4,10 @@ import com.Concesionaria.auth_service.DTO.*;
 import com.Concesionaria.auth_service.model.User;
 import com.Concesionaria.auth_service.repository.UserRepository;
 import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -27,13 +27,28 @@ public class UserService implements IUserServicie {
     }
 
     @Override
-    public Optional<User> findById(Integer id) {
-        return repo.findById(id).filter(User::getActivo);
+    public Optional<UserGetDTO> findById(Integer id) {
+        Optional<User> optUser = repo.findById(id).filter(User::getActivo);
+        if (optUser.isPresent()) {
+            UserGetDTO dto = MapperDto.toDTO(optUser.get());
+            List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(dto.getId());
+            dto.setVentas(ventas);
+            return Optional.of(dto);
+        }
+        return Optional.empty();
     }
 
     @Override
-    public List<User> findAll() {
-        return repo.findAll();
+    public List<UserGetDTO> findAll() {
+        List<User> usuarios = repo.findAll();
+        List<UserGetDTO> dtos = new ArrayList<>();
+        for (User user : usuarios) {
+            UserGetDTO dto = MapperDto.toDTO(user);
+            List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(user.getId());
+            dto.setVentas(ventas);
+            dtos.add(dto);
+        }
+        return dtos;
     }
 
     @Override
@@ -51,13 +66,7 @@ public class UserService implements IUserServicie {
         if (existe(post.getDni())) {
             throw new EntityExistsException("El Usuario ya existe");
         }
-        List<UserVentaDTO> ventas = Collections.emptyList();
-        if (post.getVentasId() != null && !post.getVentasId().isEmpty()) {
-            ventas = venta.obtenerVentasPorIds(post.getVentasId());
-            if (ventas.size() != post.getVentasId().size()) {
-                throw new EntityNotFoundException("Una o más ventas no existen");
-            }
-        }
+
         User usuario = new User();
         usuario.setActivo(Boolean.TRUE);
         usuario.setDni(post.getDni());
@@ -67,22 +76,15 @@ public class UserService implements IUserServicie {
         usuario.setRol(post.getRol());
         User saved = repo.save(usuario);
         UserGetDTO dto = MapperDto.toDTO(saved);
-        dto.setVentas(ventas);
+
         return dto;
     }
 
     @Override
     public UserGetDTO actualizar(Integer id, UserPutDTO put) {
-        User user = findById(id).orElse(null);
+        User user = repo.findById(id).orElse(null);
         if (user == null) {
             throw new EntityExistsException("El Usuario no existe");
-        }
-        List<UserVentaDTO> ventas = Collections.emptyList();
-        if (put.getVentasId() != null && !put.getVentasId().isEmpty()) {
-            ventas = venta.obtenerVentasPorIds(put.getVentasId());
-            if (ventas.size() != put.getVentasId().size()) {
-                throw new EntityNotFoundException("Una o más ventas no existen");
-            }
         }
         user.setActivo(put.getActivo());
         user.setDni(put.getDni());
@@ -92,7 +94,6 @@ public class UserService implements IUserServicie {
         user.setEmail(put.getEmail());
         User save = repo.save(user);
         UserGetDTO dto = MapperDto.toDTO(save);
-        dto.setVentas(ventas);
         return dto;
     }
 

@@ -1,5 +1,6 @@
 package com.Concesionaria.auth_service;
 
+import com.Concesionaria.auth_service.DTO.UserGetDTO;
 import com.Concesionaria.auth_service.model.User;
 import com.Concesionaria.auth_service.service.IUserServicie;
 import com.Concesionaria.auth_service.util.RolUser;
@@ -24,7 +25,7 @@ public class AuthServiceApplication {
     CommandLineRunner initDatabase(IUserServicie usuarioService
     ) {
         return args -> {
-            List<User> usuarios = usuarioService.findAll();
+            List<UserGetDTO> usuarios = usuarioService.findAll();
             if (usuarios.isEmpty()) {
                 User usuarioADMIN = new User();
                 usuarioADMIN.setRol(RolUser.ADMIN);

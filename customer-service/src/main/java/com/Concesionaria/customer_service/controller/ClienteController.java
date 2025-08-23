@@ -3,8 +3,6 @@ package com.Concesionaria.customer_service.controller;
 import com.Concesionaria.customer_service.DTO.ClienteGetDTO;
 import com.Concesionaria.customer_service.DTO.ClientePostDTO;
 import com.Concesionaria.customer_service.DTO.ClientePutDTO;
-import com.Concesionaria.customer_service.DTO.MapperDTO;
-import com.Concesionaria.customer_service.model.Cliente;
 import com.Concesionaria.customer_service.service.IClienteService;
 import com.Concesionaria.customer_service.util.ApiResponse;
 import jakarta.persistence.EntityExistsException;
@@ -38,7 +36,7 @@ public class ClienteController {
     @GetMapping
     public ResponseEntity<?> listarUsuario() {
         try {
-            List<ClienteGetDTO> dto = clienteService.findAll().stream().map(MapperDTO::toDTO).toList();
+            List<ClienteGetDTO> dto = clienteService.findAll();
             return new ResponseEntity<>(new ApiResponse<>("Listado de cliente obtenidos correctamente", dto, true), HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ApiResponse<>("Error: ", null, false), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -48,10 +46,9 @@ public class ClienteController {
     @GetMapping("{id}")
     public ResponseEntity<?> obtenerUsuario(@PathVariable Integer id) {
         try {
-            Cliente cliente = clienteService.findById(id).orElse(null);
+            ClienteGetDTO cliente = clienteService.findById(id).orElse(null);
             if (cliente != null) {
-                ClienteGetDTO dto = MapperDTO.toDTO(cliente);
-                return new ResponseEntity<>(new ApiResponse<>("Cliente encontrado con éxito", dto, true), HttpStatus.OK);
+                return new ResponseEntity<>(new ApiResponse<>("Cliente encontrado con éxito", cliente, true), HttpStatus.OK);
             } else {
                 return new ResponseEntity<>(new ApiResponse<>("Cliente no encontrado", null, false), HttpStatus.NOT_FOUND);
             }
@@ -75,11 +72,10 @@ public class ClienteController {
     @DeleteMapping("{id}")
     public ResponseEntity<?> eliminar(@PathVariable Integer id) {
         try {
-            Cliente cliente = clienteService.findById(id).orElse(null);
-            if(cliente !=null){
+            ClienteGetDTO cliente = clienteService.findById(id).orElse(null);
+            if (cliente != null) {
                 clienteService.delete(cliente.getId());
-                ClienteGetDTO dto = MapperDTO.toDTO(cliente);
-                return new ResponseEntity<>(new ApiResponse<>("cliente dado de baja", dto, true), HttpStatus.OK);
+                return new ResponseEntity<>(new ApiResponse<>("cliente dado de baja", cliente, true), HttpStatus.OK);
             }
             return new ResponseEntity<>(new ApiResponse<>("cliente no encontrado: ", null, false), HttpStatus.NOT_FOUND);
         } catch (Exception e) {

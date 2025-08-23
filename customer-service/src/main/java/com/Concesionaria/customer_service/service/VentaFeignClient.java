@@ -2,13 +2,13 @@ package com.Concesionaria.customer_service.service;
 
 import com.Concesionaria.customer_service.DTO.ClienteVentaDTO;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
 @FeignClient(name = "venta-service")
 public interface VentaFeignClient {
-    @PostMapping("/ventas/ids")
-    List<ClienteVentaDTO> obtenerVentasPorIds(@RequestBody List<Integer> ids);
+    @GetMapping("/ventas/cliente/{clienteId}")
+    List<ClienteVentaDTO> obtenerVentasPorCliente(@PathVariable Integer clienteId);
 }

@@ -17,9 +17,9 @@ public interface IClienteService {
 
     ClienteGetDTO actualizar (Integer id, ClientePutDTO put);
 
-    Optional<Cliente> findById(Integer id);
+    Optional<ClienteGetDTO> findById(Integer id);
 
-    List<Cliente> findAll();
+    List<ClienteGetDTO> findAll();
 
     void delete(Integer id);
 }
