@@ -28,7 +28,7 @@ public class UserService implements IUserServicie {
 
     @Override
     public Optional<User> findById(Integer id) {
-        return repo.findById(id);
+        return repo.findById(id).filter(User::getActivo);
     }
 
     @Override

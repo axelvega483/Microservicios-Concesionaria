@@ -9,18 +9,19 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IUserServicie {
-    public User save(User user);
+    User save(User user);
 
-    public Optional<User> findById(Integer id);
+    Optional<User> findById(Integer id);
 
-    public List<User> findAll();
+    List<User> findAll();
 
-    public void delete(Integer id);
+    void delete(Integer id);
 
-    public UserGetDTO crear(UserPostDTO post);
-    public UserGetDTO actualizar (Integer id, UserPutDTO put);
+    UserGetDTO crear(UserPostDTO post);
 
-    public Boolean existe(String dni);
+    UserGetDTO actualizar(Integer id, UserPutDTO put);
 
-    public Optional<User> findByCorreoAndPassword(String email, String password);
+    Boolean existe(String dni);
+
+    Optional<User> findByCorreoAndPassword(String email, String password);
 }
