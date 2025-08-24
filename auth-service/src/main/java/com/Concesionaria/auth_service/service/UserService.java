@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,8 +30,8 @@ public class UserService implements IUserServicie {
         Optional<User> optUser = repo.findById(id).filter(User::getActivo);
         if (optUser.isPresent()) {
             UserGetDTO dto = MapperDto.toDTO(optUser.get());
-            List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(dto.getId());
-            dto.setVentas(ventas);
+          //  List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(dto.getId());
+           // dto.setVentas(ventas);
             return Optional.of(dto);
         }
         return Optional.empty();
@@ -42,10 +41,10 @@ public class UserService implements IUserServicie {
     public List<UserGetDTO> findAll() {
         List<User> usuarios = repo.findAll();
         List<UserGetDTO> dtos = new ArrayList<>();
-        for (User user : usuarios) {
+       for (User user : usuarios) {
             UserGetDTO dto = MapperDto.toDTO(user);
-            List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(user.getId());
-            dto.setVentas(ventas);
+           // List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(user.getId());
+           // dto.setVentas(ventas);
             dtos.add(dto);
         }
         return dtos;

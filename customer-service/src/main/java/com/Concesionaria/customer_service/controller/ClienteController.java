@@ -39,7 +39,7 @@ public class ClienteController {
             List<ClienteGetDTO> dto = clienteService.findAll();
             return new ResponseEntity<>(new ApiResponse<>("Listado de cliente obtenidos correctamente", dto, true), HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: ", null, false), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ApiResponse<>("Error: "+e.getMessage(), null, false), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

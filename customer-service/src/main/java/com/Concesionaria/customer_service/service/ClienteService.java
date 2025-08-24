@@ -67,8 +67,8 @@ public class ClienteService implements IClienteService {
         Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
         if (optUser.isPresent()) {
             ClienteGetDTO dto = MapperDTO.toDTO(optUser.get());
-            List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(dto.getId());
-            dto.setVentas(ventas);
+       //     List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(dto.getId());
+        //    dto.setVentas(ventas);
             return Optional.of(dto);
         }
         return Optional.empty();
@@ -80,8 +80,8 @@ public class ClienteService implements IClienteService {
         List<ClienteGetDTO> dtos = new ArrayList<>();
         for (Cliente cliente : clientes) {
             ClienteGetDTO dto = MapperDTO.toDTO(cliente);
-            List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(cliente.getId());
-            dto.setVentas(ventas);
+          //  List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(cliente.getId());
+          //  dto.setVentas(ventas);
             dtos.add(dto);
         }
         return dtos;
