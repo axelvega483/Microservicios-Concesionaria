@@ -14,5 +14,6 @@ public class ClienteGetDTO {
     private String email;
     private String dni;
     private Boolean activo;
-    private List<ClienteVentaDTO> compras;
+    private List<ClienteVentaDTO> ventas;
+    private String throwable;
 }

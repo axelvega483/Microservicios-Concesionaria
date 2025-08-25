@@ -22,4 +22,6 @@ public class UserGetDTO {
     private Boolean activo;
 
     private List<UserVentaDTO> ventas;
+
+    private String throwable;
 }
