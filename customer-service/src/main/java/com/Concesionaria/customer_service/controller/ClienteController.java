@@ -24,7 +24,7 @@ public class ClienteController {
     @PostMapping("crear")
     public ResponseEntity<?> crear(@Valid @RequestBody ClientePostDTO postDTO) {
         try {
-            ClienteGetDTO dto = clienteService.created(postDTO);
+            ClienteGetDTO dto = clienteService.create(postDTO);
             return new ResponseEntity<>(new ApiResponse<>("Cliente Creado", dto, true), HttpStatus.CREATED);
         } catch (EntityExistsException e) {
             return new ResponseEntity<>(new ApiResponse<>("Error: " + e.getMessage(), null, false), HttpStatus.CONFLICT);

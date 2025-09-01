@@ -29,7 +29,7 @@ public class ClienteService implements IClienteService {
     }
 
     @Override
-    public ClienteGetDTO created(ClientePostDTO post) {
+    public ClienteGetDTO create(ClientePostDTO post) {
         if (existe(post.getDni())) {
             throw new EntityExistsException("El Cliente ya existe");
         }

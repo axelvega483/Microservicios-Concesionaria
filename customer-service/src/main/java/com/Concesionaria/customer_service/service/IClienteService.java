@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface IClienteService {
     Boolean existe(String dni);
 
-    ClienteGetDTO created(ClientePostDTO post);
+    ClienteGetDTO create(ClientePostDTO post);
 
     Cliente save(Cliente cliente);
 
