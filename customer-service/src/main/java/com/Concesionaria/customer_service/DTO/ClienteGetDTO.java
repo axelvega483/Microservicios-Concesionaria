@@ -15,5 +15,4 @@ public class ClienteGetDTO {
     private String dni;
     private Boolean activo;
     private List<ClienteVentaDTO> ventas;
-    private String throwable;
 }

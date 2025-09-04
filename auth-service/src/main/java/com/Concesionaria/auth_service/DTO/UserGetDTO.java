@@ -23,5 +23,4 @@ public class UserGetDTO {
 
     private List<UserVentaDTO> ventas;
 
-    private String throwable;
 }

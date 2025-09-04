@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IServiceImagen {
+
     Imagen save(Imagen imagen);
 
     Optional<Imagen> findById(Integer id);

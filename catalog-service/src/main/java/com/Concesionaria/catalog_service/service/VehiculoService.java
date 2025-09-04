@@ -82,11 +82,6 @@ public class VehiculoService implements IVehiculoService {
     }
 
     @Override
-    public Vehiculo saveVehiculo(Vehiculo vehiculo) {
-        return repo.save(vehiculo);
-    }
-
-    @Override
     public VehiculoGetDTO updateVehiculo(Integer id, VehiculoPutDTO put) {
         Vehiculo vehiculo = repo.findById(id).orElse(null);
         if (vehiculo == null) {
@@ -109,8 +104,8 @@ public class VehiculoService implements IVehiculoService {
 
 
     @Override
-    @CircuitBreaker(name = "venta-service", fallbackMethod = "findByVehiculoNoVenta")
-    @Retry(name = "venta-service")
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByVehiculoNoVenta")
+    @Retry(name = "sales-service")
     public Optional<VehiculoGetDTO> findByIdVehiculo(Integer id) {
         Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::getActivo);
         if (optVehi.isPresent()) {
@@ -136,14 +131,14 @@ public class VehiculoService implements IVehiculoService {
             }
             return Optional.empty();
         } catch (Exception e) {
-            System.err.println("Error en fallback findByVehiculoNoVenta: " + e.getMessage());
+            System.err.println("Error en fallback findByVehiculoNoVenta: " + e.getMessage()+" "+throwable.getMessage());
             return Optional.empty();
         }
     }
 
     @Override
-    @CircuitBreaker(name = "venta-service", fallbackMethod = "findByAllVehiculonoVenta")
-    @Retry(name = "venta-service")
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByAllVehiculonoVenta")
+    @Retry(name = "sales-service")
     public List<VehiculoGetDTO> findAllVehiculo() {
         List<Vehiculo> vehiculos = repo.findAllActivo();
         List<VehiculoGetDTO> dtos = new ArrayList<>();
@@ -167,7 +162,7 @@ public class VehiculoService implements IVehiculoService {
             }
             return dtos;
         } catch (Exception e) {
-            System.err.println("Error en fallback findByAllVehiculonoVenta: " + e.getMessage());
+            System.err.println("Error en fallback findByAllVehiculonoVenta: " + e.getMessage()+" "+throwable.getMessage());
             return Collections.emptyList();
         }
     }
@@ -238,8 +233,8 @@ public class VehiculoService implements IVehiculoService {
     }
 
     @Override
-    @CircuitBreaker(name = "venta-service", fallbackMethod = "eliminarImagenVehiculoFallback")
-    @Retry(name = "venta-service")
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "eliminarImagenVehiculoFallback")
+    @Retry(name = "sales-service")
     public VehiculoGetDTO eliminarImagenVehiculo(Integer vehiculoId, Integer imagenId) {
         Optional<Vehiculo> vehiculoOpt = findEntityByIdVehiculo(vehiculoId);
         if (vehiculoOpt.isEmpty()) {
@@ -299,7 +294,7 @@ public class VehiculoService implements IVehiculoService {
             }
             throw new EntityNotFoundException("Vehículo no encontrado en fallback");
         } catch (Exception e) {
-            System.err.println("Error en fallback eliminarImagenVehiculo: " + e.getMessage());
+            System.err.println("Error en fallback eliminarImagenVehiculo: " + e.getMessage()+" "+throwable.getMessage());
 
             VehiculoGetDTO dto = new VehiculoGetDTO();
             dto.setImagenes(Collections.emptyList());

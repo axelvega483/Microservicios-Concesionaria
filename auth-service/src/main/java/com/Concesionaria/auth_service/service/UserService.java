@@ -5,7 +5,6 @@ import com.Concesionaria.auth_service.model.User;
 import com.Concesionaria.auth_service.repository.UserRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
-import jakarta.persistence.Column;
 import jakarta.persistence.EntityExistsException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +28,8 @@ public class UserService implements IUserServicie {
     }
 
     @Override
-    @CircuitBreaker(name = "venta-service",fallbackMethod = "findByUserNoVenta")
-    @Retry(name = "venta-service")
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByUserNoVenta")
+    @Retry(name = "sales-service")
     public Optional<UserGetDTO> findById(Integer id) {
         Optional<User> optUser = repo.findById(id).filter(User::getActivo);
         if (optUser.isPresent()) {
@@ -41,20 +40,25 @@ public class UserService implements IUserServicie {
         }
         return Optional.empty();
     }
-    public Optional<UserGetDTO> findByUserNoVenta(Integer id,Throwable throwable) {
-        Optional<User> optUser = repo.findById(id).filter(User::getActivo);
-        if (optUser.isPresent()) {
-            UserGetDTO dto = MapperDto.toDTO(optUser.get());
-            dto.setVentas(Collections.emptyList());
-            dto.setThrowable("Throwable activado - Error: "+throwable.getMessage());
-            return Optional.of(dto);
+
+    public Optional<UserGetDTO> findByUserNoVenta(Integer id, Throwable throwable) {
+        try {
+            Optional<User> optUser = repo.findById(id).filter(User::getActivo);
+            if (optUser.isPresent()) {
+                UserGetDTO dto = MapperDto.toDTO(optUser.get());
+                dto.setVentas(Collections.emptyList());
+                return Optional.of(dto);
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     @Override
-    @CircuitBreaker(name = "vanta-service",fallbackMethod = "findAllUserNoVenta")
-    @Retry(name = "venta-service")
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "findAllUserNoVenta")
+    @Retry(name = "sales-service")
     public List<UserGetDTO> findAll() {
         List<User> usuarios = repo.findAll();
         List<UserGetDTO> dtos = new ArrayList<>();
@@ -66,16 +70,21 @@ public class UserService implements IUserServicie {
         }
         return dtos;
     }
+
     public List<UserGetDTO> findAllUserNoVenta(Throwable throwable) {
-        List<User> usuarios = repo.findAll();
-        List<UserGetDTO> dtos = new ArrayList<>();
-        for (User user : usuarios) {
-            UserGetDTO dto = MapperDto.toDTO(user);
-            dto.setVentas(Collections.emptyList());
-            dto.setThrowable("Throwable activado - Error: "+throwable.getMessage());
-            dtos.add(dto);
+        try {
+            List<User> usuarios = repo.findAll();
+            List<UserGetDTO> dtos = new ArrayList<>();
+            for (User user : usuarios) {
+                UserGetDTO dto = MapperDto.toDTO(user);
+                dto.setVentas(Collections.emptyList());
+                dtos.add(dto);
+            }
+            return dtos;
+        } catch (Exception e) {
+            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
+            return Collections.emptyList();
         }
-        return dtos;
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.Concesionaria.auth_service.controller;
 import com.Concesionaria.auth_service.DTO.*;
 import com.Concesionaria.auth_service.model.User;
 import com.Concesionaria.auth_service.service.IUserServicie;
-import com.Concesionaria.auth_service.util.ApiResponse;
 import jakarta.persistence.EntityExistsException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +25,11 @@ public class authController {
     public ResponseEntity<?> crear(@Valid @RequestBody UserPostDTO postDTO) {
         try {
             UserGetDTO dto = userService.crear(postDTO);
-            return new ResponseEntity<>(new ApiResponse<>("Usuario Creado", dto, true), HttpStatus.CREATED);
+            return new ResponseEntity<>(dto, HttpStatus.CREATED);
         } catch (EntityExistsException e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: " + e.getMessage(), null, false), HttpStatus.CONFLICT);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.CONFLICT);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: " + e.getMessage(), null, false), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -41,11 +40,11 @@ public class authController {
             System.out.println("user" + optionalUsuario.toString());
             if (optionalUsuario.isPresent()) {
                 UserGetDTO dto = MapperDto.toDTO(optionalUsuario.get());
-                return new ResponseEntity<>(new ApiResponse<>("Login correcto", dto, true), HttpStatus.OK);
+                return new ResponseEntity<>(dto, HttpStatus.OK);
             }
-            return new ResponseEntity<>(new ApiResponse<>("Credenciales no encontradas", null, false), HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>("Credenciales no encontradas", HttpStatus.UNAUTHORIZED);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: " + e.getMessage(), null, false), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
 
@@ -56,9 +55,9 @@ public class authController {
     public ResponseEntity<?> listarUsuario() {
         try {
             List<UserGetDTO> dto = userService.findAll();
-            return new ResponseEntity<>(new ApiResponse<>("Listado de usuarios obtenidos correctamente", dto, true), HttpStatus.OK);
+            return new ResponseEntity<>(dto, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: ", null, false), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: "+e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -67,12 +66,12 @@ public class authController {
         try {
             UserGetDTO usuario = userService.findById(id).orElse(null);
             if (usuario != null) {
-                return new ResponseEntity<>(new ApiResponse<>("Usuario encontrado con éxito", usuario, true), HttpStatus.OK);
+                return new ResponseEntity<>(usuario, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>(new ApiResponse<>("Usuario no encontrado", null, false), HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>("Usuario no encontrado", HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: ", null, false), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: "+e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -80,11 +79,11 @@ public class authController {
     public ResponseEntity<?> actualizar(@PathVariable Integer id, @RequestBody UserPutDTO putDTO) {
         try {
             UserGetDTO dto = userService.actualizar(id, putDTO);
-            return new ResponseEntity<>(new ApiResponse<>("Usuario actualiazo", dto, true), HttpStatus.OK);
+            return new ResponseEntity<>(dto, HttpStatus.OK);
         } catch (EntityExistsException e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: " + e.getMessage(), null, false), HttpStatus.CONFLICT);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.CONFLICT);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: " + e.getMessage(), null, false), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -94,11 +93,11 @@ public class authController {
             UserGetDTO user = userService.findById(id).orElse(null);
             if(user !=null){
                 userService.delete(user.getId());
-                return new ResponseEntity<>(new ApiResponse<>("Usuario dado de baja",user, true), HttpStatus.OK);
+                return new ResponseEntity<>(user, HttpStatus.OK);
             }
-            return new ResponseEntity<>(new ApiResponse<>("Usuario no encontrado: ", null, false), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("Usuario no encontrado: ", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            return new ResponseEntity<>(new ApiResponse<>("Error: " + e.getMessage(), null, false), HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

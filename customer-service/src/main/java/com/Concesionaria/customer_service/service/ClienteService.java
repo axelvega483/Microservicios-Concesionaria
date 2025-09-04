@@ -45,11 +45,6 @@ public class ClienteService implements IClienteService {
         return dto;
     }
 
-    @Override
-    public Cliente save(Cliente cliente) {
-        cliente.setActivo(Boolean.TRUE);
-        return repo.save(cliente);
-    }
 
     @Override
     public ClienteGetDTO actualizar(Integer id, ClientePutDTO put) {
@@ -67,8 +62,8 @@ public class ClienteService implements IClienteService {
     }
 
     @Override
-    @CircuitBreaker(name = "venta-service", fallbackMethod = "findByClienteNoVenta")
-    @Retry(name = "venta-service")
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByClienteNoVenta")
+    @Retry(name = "sales-service")
     public Optional<ClienteGetDTO> findById(Integer id) {
         Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
         if (optUser.isPresent()) {
@@ -80,20 +75,24 @@ public class ClienteService implements IClienteService {
         return Optional.empty();
     }
 
-    public Optional<ClienteGetDTO> findByClienteNoVenta(Integer id,Throwable throwable) {
-        Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
-        if (optUser.isPresent()) {
-            ClienteGetDTO dto = MapperDTO.toDTO(optUser.get());
-            dto.setVentas(Collections.emptyList());
-            dto.setThrowable("Throwable activado - Error: "+throwable.getMessage());
-            return Optional.of(dto);
+    public Optional<ClienteGetDTO> findByClienteNoVenta(Integer id, Throwable throwable) {
+        try {
+            Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
+            if (optUser.isPresent()) {
+                ClienteGetDTO dto = MapperDTO.toDTO(optUser.get());
+                dto.setVentas(Collections.emptyList());
+                return Optional.of(dto);
+            }
+            return Optional.empty();
+        } catch (Exception e) {
+            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     @Override
-    @CircuitBreaker(name = "venta-service", fallbackMethod = "findByAllClientenoVenta")
-    @Retry(name = "venta-service")
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByAllClientenoVenta")
+    @Retry(name = "sales-service")
     public List<ClienteGetDTO> findAll() {
         List<Cliente> clientes = repo.findAll();
         List<ClienteGetDTO> dtos = new ArrayList<>();
@@ -105,16 +104,21 @@ public class ClienteService implements IClienteService {
         }
         return dtos;
     }
-    public List<ClienteGetDTO>findByAllClientenoVenta(Throwable throwable) {
-        List<Cliente> clientes = repo.findAll();
-        List<ClienteGetDTO> dtos = new ArrayList<>();
-        for (Cliente cliente : clientes) {
-            ClienteGetDTO dto = MapperDTO.toDTO(cliente);
-            dto.setVentas(Collections.emptyList());
-            dto.setThrowable("Throwable activado - Error: "+throwable.getMessage());
-            dtos.add(dto);
+
+    public List<ClienteGetDTO> findByAllClientenoVenta(Throwable throwable) {
+        try {
+            List<Cliente> clientes = repo.findAll();
+            List<ClienteGetDTO> dtos = new ArrayList<>();
+            for (Cliente cliente : clientes) {
+                ClienteGetDTO dto = MapperDTO.toDTO(cliente);
+                dto.setVentas(Collections.emptyList());
+                dtos.add(dto);
+            }
+            return dtos;
+        } catch (Exception e) {
+            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
+            return Collections.emptyList();
         }
-        return dtos;
     }
 
     @Override

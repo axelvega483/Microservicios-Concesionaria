@@ -14,7 +14,6 @@ import java.util.Optional;
 public interface IVehiculoService {
     VehiculoGetDTO createVehiculo(VehiculoPostDTO post);
 
-    Vehiculo saveVehiculo(Vehiculo vehiculo);
 
     VehiculoGetDTO updateVehiculo (Integer id, VehiculoPutDTO put);
 
