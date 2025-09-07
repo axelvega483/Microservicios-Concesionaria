@@ -1,0 +1,565 @@
+{
+	"info": {
+		"_postman_id": "9d2f53a4-51e7-476e-b2bb-215b9ff5ad44",
+		"name": "Microservicios-Concesionaria",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "39124408"
+	},
+	"item": [
+		{
+			"name": "Auth-service",
+			"item": [
+				{
+					"name": "crear",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"sofia@depompa.com\",\r\n    \"password\":\"sofialujan\",\r\n    \"nombre\":\"sofia lujan depompa\",\r\n    \"rol\":\"EMPLEADO\",\r\n    \"dni\":\"43123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/auth-service/auth/crear",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth-service",
+								"auth",
+								"crear"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"sofia@depompa.com\",\r\n    \"password\": \"sofialujan\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8080/auth-service/auth/login",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth-service",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "obtener",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"axel@vega.com\",\r\n    \"password\":\"axelseba483\",\r\n    \"nombre\":\"axel vega\",\r\n    \"rol\":\"EMPLEADO\",\r\n    \"dni\":\"39667641\",\r\n    \"ventasId\": []\r\n}"
+						},
+						"url": {
+							"raw": "localhost:8080/auth-service/auth",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"auth-service",
+								"auth"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Customer-service",
+			"item": [
+				{
+					"name": "crear",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"nombre\": \"Axel Vega\",\r\n    \"email\":\"Axelseba483@gmail.com\",\r\n    \"dni\":\"39667641\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8082/customer/crear",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"customer",
+								"crear"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "obtener",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/customer-service/customer",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"customer-service",
+								"customer"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Catalog-service",
+			"item": [
+				{
+					"name": "obtener",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/catalog-service/catalog",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"catalog-service",
+								"catalog"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "crear",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"marca\": \"Toyota\",\r\n  \"modelo\": \"Corolla\",\r\n  \"anioModelo\": 2022,\r\n  \"precio\": 25000,\r\n  \"stock\": 5,\r\n  \"color\": \"Blanco\",\r\n  \"tipo\": \"AUTO\",\r\n  \"estado\": \"NUEVO\",\r\n  \"kilometraje\": 0,\r\n  \"nombresImagenes\": [],\r\n  \"activo\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/catalog-service/vehiculo/crear",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"catalog-service",
+								"vehiculo",
+								"crear"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "subir img",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imagenes",
+									"type": "file",
+									"src": "/C:/Users/sdepo/Downloads/Captura de pantalla_12-5-2025_135635_www.instagram.com.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/catalog-service/vehiculo/1/imagenes",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"catalog-service",
+								"vehiculo",
+								"1",
+								"imagenes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "editar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"marca\": \"Toyota\",\r\n  \"modelo\": \"Corolla XLI\",\r\n  \"anioModelo\": 2023,\r\n  \"precio\": 27000,\r\n  \"stock\": 10,\r\n  \"color\": \"Negro\",\r\n  \"tipo\": \"AUTO\",\r\n  \"estado\": \"NUEVO\",\r\n  \"kilometraje\": 0,\r\n  \"activo\": true}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/catalog-service/vehiculo/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"catalog-service",
+								"vehiculo",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "dar baja",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/catalog-service/vehiculo/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"catalog-service",
+								"vehiculo",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "obtner img",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imagenes",
+									"type": "file",
+									"src": "/C:/Users/sdepo/Downloads/Captura de pantalla_12-5-2025_135635_www.instagram.com.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/catalog-service/vehiculo/1/imagen/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"catalog-service",
+								"vehiculo",
+								"1",
+								"imagen",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete img",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imagenes",
+									"type": "file",
+									"src": "/C:/Users/sdepo/Downloads/Captura de pantalla_12-5-2025_135635_www.instagram.com.jpeg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/catalog-service/vehiculo/1/imagen/3",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"catalog-service",
+								"vehiculo",
+								"1",
+								"imagen",
+								"3"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sales-service",
+			"item": [
+				{
+					"name": "crear",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"frecuenciaPago\": \"MENSUAL\",\r\n    \"clienteId\": 1,\r\n    \"userId\": 1,\r\n    \"entrega\": 5000.00,\r\n    \"cuotas\": 5,\r\n    \"detalleVentas\": [\r\n        {\r\n            \"vehiculoId\": 1,\r\n            \"cantidad\": 1,\r\n            \"precioUnitario\": 27000.00\r\n        }\r\n    ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/sales-service/sales",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"sales-service",
+								"sales"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "obtner",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"frecuenciaPago\": \"MENSUAL\",\r\n    \"clienteId\": 1,\r\n    \"userId\": 1,\r\n    \"entrega\": 5000.00,\r\n    \"cuotas\": 5,\r\n    \"detalleVentas\": [\r\n        {\r\n            \"vehiculoId\": 1,\r\n            \"cantidad\": 1,\r\n            \"precioUnitario\": 27000.00\r\n        }\r\n    ]\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/sales-service/sales",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"sales-service",
+								"sales"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Payments-service",
+			"item": [
+				{
+					"name": "obtner",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"frecuenciaPago\": \"MENSUAL\",\r\n    \"clienteId\": 1,\r\n    \"userId\": 1,\r\n    \"entrega\": 5000.00,\r\n    \"cuotas\": 5,\r\n    \"detalleVentas\": [\r\n        {\r\n            \"vehiculoId\": 1,\r\n            \"cantidad\": 1,\r\n            \"precioUnitario\": 27000.00\r\n        }\r\n    ]\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/payments-service/pagos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"payments-service",
+								"pagos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pagar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/payments-service/pagos/confirmar/6?metodoPago=TRANSFERENCIA",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"payments-service",
+								"pagos",
+								"confirmar",
+								"6"
+							],
+							"query": [
+								{
+									"key": "metodoPago",
+									"value": "TRANSFERENCIA"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "actualizar",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n   \"metodoPago\":\"PENDIENTE\",\r\n   \"estado\":\"PENDIENTE\",\r\n   \"activo\":\"TRUE\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/payments-service/pagos/6",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"payments-service",
+								"pagos",
+								"6"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cancelar",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"frecuenciaPago\": \"MENSUAL\",\r\n    \"clienteId\": 1,\r\n    \"userId\": 1,\r\n    \"entrega\": 5000.00,\r\n    \"cuotas\": 5,\r\n    \"detalleVentas\": [\r\n        {\r\n            \"vehiculoId\": 1,\r\n            \"cantidad\": 1,\r\n            \"precioUnitario\": 27000.00\r\n        }\r\n    ]\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/payments-service/pagos/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"payments-service",
+								"pagos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ticket",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"frecuenciaPago\": \"MENSUAL\",\r\n    \"clienteId\": 1,\r\n    \"userId\": 1,\r\n    \"entrega\": 5000.00,\r\n    \"cuotas\": 5,\r\n    \"detalleVentas\": [\r\n        {\r\n            \"vehiculoId\": 1,\r\n            \"cantidad\": 1,\r\n            \"precioUnitario\": 27000.00\r\n        }\r\n    ]\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/payments-service/pagos/ticket/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"payments-service",
+								"pagos",
+								"ticket",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
