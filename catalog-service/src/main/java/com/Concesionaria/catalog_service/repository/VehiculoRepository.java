@@ -1,6 +1,5 @@
 package com.Concesionaria.catalog_service.repository;
 
-import com.Concesionaria.catalog_service.DTO.VehiculoGetDTO;
 import com.Concesionaria.catalog_service.model.Vehiculo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

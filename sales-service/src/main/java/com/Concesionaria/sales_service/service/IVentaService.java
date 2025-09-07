@@ -2,6 +2,7 @@ package com.Concesionaria.sales_service.service;
 
 import com.Concesionaria.sales_service.DTO.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface IVentaService {
@@ -21,5 +22,7 @@ public interface IVentaService {
     List<UserVentaDTO> obtenerVentasPorUser(Integer userId);
 
     List<ClienteVentaDTO> obtenerVentasPorCliente(Integer clienteId);
+
+    void actualizarSaldo(Integer ventaId, BigDecimal montoPagado);
 
 }

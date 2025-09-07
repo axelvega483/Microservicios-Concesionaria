@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -29,13 +30,14 @@ public class VentaController {
             return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @GetMapping
     public ResponseEntity<?> listarVenta() {
         try {
             List<VentaGetDTO> dto = ventaService.findAll();
             return new ResponseEntity<>(dto, HttpStatus.OK);
         } catch (Exception e) {
-            return new ResponseEntity<>("Error: "+e.getMessage(),  HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -46,10 +48,10 @@ public class VentaController {
             if (venta != null) {
                 return new ResponseEntity<>(venta, HttpStatus.OK);
             } else {
-                return new ResponseEntity<>("Venta no encontrado", HttpStatus.NOT_FOUND);
+                return new ResponseEntity<>("Venta no encontrada", HttpStatus.NOT_FOUND);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("Error: ", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -73,11 +75,12 @@ public class VentaController {
                 ventaService.delete(venta.getId());
                 return new ResponseEntity<>(venta, HttpStatus.OK);
             }
-            return new ResponseEntity<>("cliente no encontrado: ",HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>("cliente no encontrado: ", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @GetMapping("/vehiculo/{vehiculoId}")
     public ResponseEntity<?> obtenerVentasPorVehiculo(@PathVariable Integer vehiculoId) {
         try {
@@ -87,6 +90,7 @@ public class VentaController {
             return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
     @GetMapping("/cliente/{clienteId}")
     public ResponseEntity<?> obtenerVentasPorCliente(@PathVariable Integer clienteId) {
         try {
@@ -101,9 +105,24 @@ public class VentaController {
     public ResponseEntity<?> obtenerVentasPorUser(@PathVariable Integer userId) {
         try {
             List<UserVentaDTO> ventas = ventaService.obtenerVentasPorUser(userId);
-            return new ResponseEntity<>(ventas,HttpStatus.OK);
+            return new ResponseEntity<>(ventas, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+
+    @PutMapping("/ventas/{ventaId}/saldo")
+    public ResponseEntity<Void> actualizarSaldoVenta(@PathVariable Integer ventaId, @RequestParam BigDecimal montoPagado) {
+        try {
+            VentaGetDTO venta = ventaService.findById(ventaId);
+            if (venta != null) {
+                ventaService.actualizarSaldo(ventaId, montoPagado);
+                return new ResponseEntity<>(HttpStatus.OK);
+            }
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

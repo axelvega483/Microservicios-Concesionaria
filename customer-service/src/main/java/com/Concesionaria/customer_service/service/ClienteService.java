@@ -6,7 +6,6 @@ import com.Concesionaria.customer_service.repository.ClienteRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.EntityExistsException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,13 +14,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@Slf4j
 @Service
 public class ClienteService implements IClienteService {
     @Autowired
     private ClienteRepository repo;
     @Autowired
     private VentaFeignClient venta;
+    @Autowired
+    private MapperDTO mapper;
 
     @Override
     public Boolean existe(String dni) {
@@ -33,16 +33,9 @@ public class ClienteService implements IClienteService {
         if (existe(post.getDni())) {
             throw new EntityExistsException("El Cliente ya existe");
         }
-        List<ClienteVentaDTO> ventas = Collections.emptyList();
-        Cliente cliente = new Cliente();
-        cliente.setActivo(Boolean.TRUE);
-        cliente.setDni(post.getDni());
-        cliente.setEmail(post.getEmail());
-        cliente.setNombre(post.getNombre());
+        Cliente cliente = mapper.create(post);
         Cliente saved = repo.save(cliente);
-        ClienteGetDTO dto = MapperDTO.toDTO(saved);
-
-        return dto;
+        return mapper.toDTO(saved);
     }
 
 
@@ -52,13 +45,9 @@ public class ClienteService implements IClienteService {
         if (cliente == null) {
             throw new EntityExistsException("El Cliente no existe");
         }
-        cliente.setActivo(Boolean.TRUE);
-        cliente.setDni(put.getDni());
-        cliente.setEmail(put.getEmail());
-        cliente.setNombre(put.getNombre());
+        cliente=mapper.update(cliente,put);
         Cliente saved = repo.save(cliente);
-        ClienteGetDTO dto = MapperDTO.toDTO(saved);
-        return dto;
+        return  mapper.toDTO(saved);
     }
 
     @Override
@@ -67,7 +56,7 @@ public class ClienteService implements IClienteService {
     public Optional<ClienteGetDTO> findById(Integer id) {
         Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
         if (optUser.isPresent()) {
-            ClienteGetDTO dto = MapperDTO.toDTO(optUser.get());
+            ClienteGetDTO dto = mapper.toDTO(optUser.get());
             List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(dto.getId());
             dto.setVentas(ventas);
             return Optional.of(dto);
@@ -79,7 +68,7 @@ public class ClienteService implements IClienteService {
         try {
             Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
             if (optUser.isPresent()) {
-                ClienteGetDTO dto = MapperDTO.toDTO(optUser.get());
+                ClienteGetDTO dto = mapper.toDTO(optUser.get());
                 dto.setVentas(Collections.emptyList());
                 return Optional.of(dto);
             }
@@ -97,7 +86,7 @@ public class ClienteService implements IClienteService {
         List<Cliente> clientes = repo.findAll();
         List<ClienteGetDTO> dtos = new ArrayList<>();
         for (Cliente cliente : clientes) {
-            ClienteGetDTO dto = MapperDTO.toDTO(cliente);
+            ClienteGetDTO dto = mapper.toDTO(cliente);
             List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(cliente.getId());
             dto.setVentas(ventas);
             dtos.add(dto);
@@ -110,7 +99,7 @@ public class ClienteService implements IClienteService {
             List<Cliente> clientes = repo.findAll();
             List<ClienteGetDTO> dtos = new ArrayList<>();
             for (Cliente cliente : clientes) {
-                ClienteGetDTO dto = MapperDTO.toDTO(cliente);
+                ClienteGetDTO dto = mapper.toDTO(cliente);
                 dto.setVentas(Collections.emptyList());
                 dtos.add(dto);
             }

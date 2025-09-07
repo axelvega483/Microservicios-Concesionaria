@@ -10,7 +10,6 @@ import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,9 +35,8 @@ public class VehiculoService implements IVehiculoService {
     @Autowired
     private VentaFeignClient venta;
 
-
-    @Value("${app.ruta.imagenes}")
-    private String rutaImagenes;
+    @Autowired
+    private MapperDTO mapper;
 
 
     public Boolean existeVehiculo(String marca, String modelo, Integer anioModelo) {
@@ -58,27 +56,9 @@ public class VehiculoService implements IVehiculoService {
             vehiculo.setStock(stock + post.getStock());
             throw new EntityExistsException("El Vehiculo ya existe, se incremento stock");
         }
-        Vehiculo vehiculo = new Vehiculo();
-        vehiculo.setActivo(post.getActivo());
-        vehiculo.setAnioModelo(post.getAnioModelo());
-        vehiculo.setColor(post.getColor());
-        vehiculo.setEstado(post.getEstado());
-        vehiculo.setKilometraje(post.getKilometraje());
-        vehiculo.setMarca(post.getMarca());
-        vehiculo.setModelo(post.getModelo());
-        vehiculo.setPrecio(post.getPrecio());
-        vehiculo.setStock(post.getStock());
-        vehiculo.setTipo(post.getTipo());
-        List<String> nombresImagenes = Optional.ofNullable(post.getNombresImagenes()).orElse(Collections.emptyList());
-        for (String nombre : nombresImagenes) {
-            Imagen imagen = new Imagen();
-            imagen.setNombre(nombre);
-            vehiculo.addImagen(imagen);
-        }
+        Vehiculo vehiculo = mapper.create(post);
         Vehiculo saved = repo.save(vehiculo);
-        VehiculoGetDTO dto = MapperDTO.toDTO(saved);
-
-        return dto;
+       return mapper.toDTO(saved);
     }
 
     @Override
@@ -87,19 +67,9 @@ public class VehiculoService implements IVehiculoService {
         if (vehiculo == null) {
             throw new EntityExistsException("El Vehiculo no existe");
         }
-        vehiculo.setActivo(put.getActivo());
-        vehiculo.setAnioModelo(put.getAnioModelo());
-        vehiculo.setColor(put.getColor());
-        vehiculo.setEstado(put.getEstado());
-        vehiculo.setKilometraje(put.getKilometraje());
-        vehiculo.setMarca(put.getMarca());
-        vehiculo.setModelo(put.getModelo());
-        vehiculo.setPrecio(put.getPrecio());
-        vehiculo.setStock(put.getStock());
-        vehiculo.setTipo(put.getTipo());
+        vehiculo = mapper.update(vehiculo, put);
         Vehiculo saved = repo.save(vehiculo);
-        VehiculoGetDTO dto = MapperDTO.toDTO(saved);
-        return dto;
+        return mapper.toDTO(saved);
     }
 
 
@@ -109,7 +79,7 @@ public class VehiculoService implements IVehiculoService {
     public Optional<VehiculoGetDTO> findByIdVehiculo(Integer id) {
         Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::getActivo);
         if (optVehi.isPresent()) {
-            VehiculoGetDTO dto = MapperDTO.toDTO(optVehi.get());
+            VehiculoGetDTO dto = mapper.toDTO(optVehi.get());
             List<Imagen> imagenes = imagenService.findByVehiculoId(id);
             dto.setImagenes(imagenes.stream()
                     .map(img -> new ImagenDTO(img.getId(), img.getNombre()))
@@ -125,13 +95,13 @@ public class VehiculoService implements IVehiculoService {
         try {
             Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::getActivo);
             if (optVehi.isPresent()) {
-                VehiculoGetDTO dto = MapperDTO.toDTO(optVehi.get());
+                VehiculoGetDTO dto = mapper.toDTO(optVehi.get());
                 dto.setDetalleVentas(Collections.emptyList());
                 return Optional.of(dto);
             }
             return Optional.empty();
         } catch (Exception e) {
-            System.err.println("Error en fallback findByVehiculoNoVenta: " + e.getMessage()+" "+throwable.getMessage());
+            System.err.println("Error en fallback findByVehiculoNoVenta: " + e.getMessage() + " " + throwable.getMessage());
             return Optional.empty();
         }
     }
@@ -143,7 +113,7 @@ public class VehiculoService implements IVehiculoService {
         List<Vehiculo> vehiculos = repo.findAllActivo();
         List<VehiculoGetDTO> dtos = new ArrayList<>();
         for (Vehiculo vehiculo : vehiculos) {
-            VehiculoGetDTO dto = MapperDTO.toDTO(vehiculo);
+            VehiculoGetDTO dto = mapper.toDTO(vehiculo);
             List<VehiculoVentaDetalleDTO> detalleVenta = venta.obtenerVentasPorVehiculo(vehiculo.getId());
             dto.setDetalleVentas(detalleVenta);
             dtos.add(dto);
@@ -156,13 +126,13 @@ public class VehiculoService implements IVehiculoService {
             List<Vehiculo> vehiculos = repo.findAll();
             List<VehiculoGetDTO> dtos = new ArrayList<>();
             for (Vehiculo vehiculo : vehiculos) {
-                VehiculoGetDTO dto = MapperDTO.toDTO(vehiculo);
+                VehiculoGetDTO dto = mapper.toDTO(vehiculo);
                 dto.setDetalleVentas(Collections.emptyList());
                 dtos.add(dto);
             }
             return dtos;
         } catch (Exception e) {
-            System.err.println("Error en fallback findByAllVehiculonoVenta: " + e.getMessage()+" "+throwable.getMessage());
+            System.err.println("Error en fallback findByAllVehiculonoVenta: " + e.getMessage() + " " + throwable.getMessage());
             return Collections.emptyList();
         }
     }
@@ -191,11 +161,10 @@ public class VehiculoService implements IVehiculoService {
         Vehiculo vehiculo = vehiculoOpt.get();
         List<Imagen> imagenesGuardadas = imagenService.procesarImagenes(imagenes, vehiculo);
 
-        // Actualizar vehículo con las nuevas imágenes
         vehiculo.getImagenes().addAll(imagenesGuardadas);
         Vehiculo vehiculoActualizado = repo.save(vehiculo);
 
-        return MapperDTO.toDTO(vehiculoActualizado);
+        return mapper.toDTO(vehiculoActualizado);
     }
 
     @Override
@@ -222,7 +191,6 @@ public class VehiculoService implements IVehiculoService {
                     .body(recurso);
 
         } catch (IOException e) {
-            // Log del error para debugging
             System.err.println("Error al obtener imagen: " + e.getMessage());
             return ResponseEntity.internalServerError().build();
         } catch (Exception e) {
@@ -261,7 +229,7 @@ public class VehiculoService implements IVehiculoService {
         imagenService.delete(imagenId);
         Vehiculo vehiculoActualizado = findEntityByIdVehiculo(vehiculoId)
                 .orElseThrow(() -> new EntityNotFoundException("Error al obtener vehículo actualizado"));
-        VehiculoGetDTO dto = MapperDTO.toDTO(vehiculoActualizado);
+        VehiculoGetDTO dto = mapper.toDTO(vehiculoActualizado);
 
         List<Imagen> imagenes = imagenService.findByVehiculoId(vehiculoId);
         dto.setImagenes(imagenes.stream()
@@ -282,7 +250,7 @@ public class VehiculoService implements IVehiculoService {
         try {
             Optional<Vehiculo> vehiculoOpt = findEntityByIdVehiculo(vehiculoId);
             if (vehiculoOpt.isPresent()) {
-                VehiculoGetDTO dto = MapperDTO.toDTO(vehiculoOpt.get());
+                VehiculoGetDTO dto = mapper.toDTO(vehiculoOpt.get());
 
                 List<Imagen> imagenes = imagenService.findByVehiculoId(vehiculoId);
                 dto.setImagenes(imagenes.stream()
@@ -294,7 +262,7 @@ public class VehiculoService implements IVehiculoService {
             }
             throw new EntityNotFoundException("Vehículo no encontrado en fallback");
         } catch (Exception e) {
-            System.err.println("Error en fallback eliminarImagenVehiculo: " + e.getMessage()+" "+throwable.getMessage());
+            System.err.println("Error en fallback eliminarImagenVehiculo: " + e.getMessage() + " " + throwable.getMessage());
 
             VehiculoGetDTO dto = new VehiculoGetDTO();
             dto.setImagenes(Collections.emptyList());

@@ -24,9 +24,10 @@ public class VentaGetDTO {
     private EstadoVenta estado;
     private Integer cuotas;
     private BigDecimal saldoRestante;
-
     private BigDecimal totalPagado;
     private Integer cantidadPagos;
     private BigDecimal montoUltimoPago;
     private LocalDate fechaUltimoPago;
+
+    private List<PagosDTO> pagos;
 }

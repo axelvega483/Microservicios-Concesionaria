@@ -6,13 +6,11 @@ import com.Concesionaria.auth_service.repository.UserRepository;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.EntityExistsException;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Slf4j
 @Service
 public class UserService implements IUserServicie {
     @Autowired
@@ -20,6 +18,9 @@ public class UserService implements IUserServicie {
 
     @Autowired
     private VentaFeignClient venta;
+
+    @Autowired
+    private MapperDto mapper;
 
     @Override
     public User save(User user) {
@@ -33,7 +34,7 @@ public class UserService implements IUserServicie {
     public Optional<UserGetDTO> findById(Integer id) {
         Optional<User> optUser = repo.findById(id).filter(User::getActivo);
         if (optUser.isPresent()) {
-            UserGetDTO dto = MapperDto.toDTO(optUser.get());
+            UserGetDTO dto = mapper.toDTO(optUser.get());
             List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(dto.getId());
             dto.setVentas(ventas);
             return Optional.of(dto);
@@ -45,7 +46,7 @@ public class UserService implements IUserServicie {
         try {
             Optional<User> optUser = repo.findById(id).filter(User::getActivo);
             if (optUser.isPresent()) {
-                UserGetDTO dto = MapperDto.toDTO(optUser.get());
+                UserGetDTO dto = mapper.toDTO(optUser.get());
                 dto.setVentas(Collections.emptyList());
                 return Optional.of(dto);
             }
@@ -63,7 +64,7 @@ public class UserService implements IUserServicie {
         List<User> usuarios = repo.findAll();
         List<UserGetDTO> dtos = new ArrayList<>();
         for (User user : usuarios) {
-            UserGetDTO dto = MapperDto.toDTO(user);
+            UserGetDTO dto = mapper.toDTO(user);
             List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(user.getId());
             dto.setVentas(ventas);
             dtos.add(dto);
@@ -76,7 +77,7 @@ public class UserService implements IUserServicie {
             List<User> usuarios = repo.findAll();
             List<UserGetDTO> dtos = new ArrayList<>();
             for (User user : usuarios) {
-                UserGetDTO dto = MapperDto.toDTO(user);
+                UserGetDTO dto = mapper.toDTO(user);
                 dto.setVentas(Collections.emptyList());
                 dtos.add(dto);
             }
@@ -102,18 +103,9 @@ public class UserService implements IUserServicie {
         if (existe(post.getDni())) {
             throw new EntityExistsException("El Usuario ya existe");
         }
-
-        User usuario = new User();
-        usuario.setActivo(Boolean.TRUE);
-        usuario.setDni(post.getDni());
-        usuario.setEmail(post.getEmail());
-        usuario.setNombre(post.getNombre());
-        usuario.setPassword(post.getPassword());
-        usuario.setRol(post.getRol());
+        User usuario = mapper.create(post);
         User saved = repo.save(usuario);
-        UserGetDTO dto = MapperDto.toDTO(saved);
-
-        return dto;
+        return mapper.toDTO(saved);
     }
 
     @Override
@@ -122,15 +114,9 @@ public class UserService implements IUserServicie {
         if (user == null) {
             throw new EntityExistsException("El Usuario no existe");
         }
-        user.setActivo(put.getActivo());
-        user.setDni(put.getDni());
-        user.setNombre(put.getNombre());
-        user.setPassword(put.getPassword());
-        user.setRol(put.getRol());
-        user.setEmail(put.getEmail());
+        user = mapper.update(user, put);
         User save = repo.save(user);
-        UserGetDTO dto = MapperDto.toDTO(save);
-        return dto;
+        return mapper.toDTO(save);
     }
 
     @Override

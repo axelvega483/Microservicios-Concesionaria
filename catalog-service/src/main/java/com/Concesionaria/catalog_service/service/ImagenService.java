@@ -78,10 +78,8 @@ public class ImagenService implements IServiceImagen{
                 String nombreArchivo = generarNombreArchivo(archivo.getOriginalFilename());
                 Path rutaCompleta = directorioPath.resolve(nombreArchivo);
 
-                // Guardar archivo físico
                 Files.write(rutaCompleta, archivo.getBytes());
 
-                // Guardar en base de datos
                 Imagen imagen = new Imagen();
                 imagen.setNombre(nombreArchivo);
                 imagen.setVehiculo(vehiculo);

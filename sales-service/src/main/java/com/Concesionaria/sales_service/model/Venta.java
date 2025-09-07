@@ -59,7 +59,7 @@ public class Venta implements Serializable {
     private Integer userId;
 
     @Column
-    private Double entrega; // porcentaje
+    private Double entrega;
 
     @Column(name = "estado", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -72,13 +72,11 @@ public class Venta implements Serializable {
     private Boolean activo = true;
 
     public void calcularTotal() {
-        // Calcular total basado en detalles
         this.total = detalleVentas.stream()
                 .map(detalle -> detalle.getPrecioUnitario()
                         .multiply(BigDecimal.valueOf(detalle.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // Validar que la entrega no sea mayor al total
         if (this.entrega != null && this.entrega > this.total.doubleValue()) {
             throw new IllegalArgumentException(
                     String.format("La entrega ($%.2f) no puede ser mayor al total de la venta ($%.2f)",
@@ -94,7 +92,4 @@ public class Venta implements Serializable {
         }
     }
 
-    public BigDecimal getSaldoRestante(BigDecimal montoPagado) {
-        return total.subtract(montoPagado);
-    }
 }

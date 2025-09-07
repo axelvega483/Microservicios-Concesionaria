@@ -1,5 +1,7 @@
 package com.Concesionaria.sales_service.DTO;
 
+import com.Concesionaria.sales_service.util.EstadoPagos;
+import com.Concesionaria.sales_service.util.MetodoPago;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,8 +16,8 @@ public class PagosDTO {
     private Integer id;
     private Integer ventaId;
     private LocalDate fechaPago;
-    private String metodoPago;
+    private MetodoPago metodoPago;
     private BigDecimal monto;
-    private String estado;
+    private EstadoPagos estado;
     private Boolean activo;
 }

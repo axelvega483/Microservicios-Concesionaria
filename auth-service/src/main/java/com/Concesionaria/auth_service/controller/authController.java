@@ -19,6 +19,8 @@ import java.util.Optional;
 public class authController {
     @Autowired
     private IUserServicie userService;
+    @Autowired
+    private MapperDto mapper;
 
 
     @PostMapping("crear")
@@ -39,7 +41,7 @@ public class authController {
             Optional<User> optionalUsuario = userService.findByCorreoAndPassword(loginDTO.getEmail(), loginDTO.getPassword());
             System.out.println("user" + optionalUsuario.toString());
             if (optionalUsuario.isPresent()) {
-                UserGetDTO dto = MapperDto.toDTO(optionalUsuario.get());
+                UserGetDTO dto = mapper.toDTO(optionalUsuario.get());
                 return new ResponseEntity<>(dto, HttpStatus.OK);
             }
             return new ResponseEntity<>("Credenciales no encontradas", HttpStatus.UNAUTHORIZED);

@@ -12,6 +12,7 @@ import java.util.List;
 
 @Component
 public class MapperDTO {
+
     public VentaGetDTO toDTO(Venta venta, BigDecimal saldoRestante) {
         VentaGetDTO dto = new VentaGetDTO();
         dto.setId(venta.getId());
@@ -21,7 +22,7 @@ public class MapperDTO {
         dto.setClienteId(venta.getClienteId());
         dto.setUserId(venta.getUserId());
         dto.setActivo(venta.getActivo());
-        dto.setEntrega(venta.getEntrega()); // ← Solo el monto, sin porcentaje
+        dto.setEntrega(venta.getEntrega());
         dto.setEstado(venta.getEstado());
         dto.setCuotas(venta.getCuotas());
         dto.setSaldoRestante(saldoRestante);
@@ -59,7 +60,6 @@ public class MapperDTO {
         venta.setEstado(EstadoVenta.ACTIVO);
         venta.setActivo(true);
 
-        // Convertir detalles DTO a entidades
         if (postDTO.getDetalleVentas() != null) {
             List<DetalleVenta> detalles = postDTO.getDetalleVentas().stream()
                     .map(this::fromDetallePostDTO)
@@ -68,6 +68,28 @@ public class MapperDTO {
         }
 
         return venta;
+    }
+    public Venta fromPutDTO(Venta venta,VentaPutDTO put){
+        if (put.getTotal() != null) venta.setTotal(put.getTotal());
+        if (put.getFrecuenciaPago() != null) venta.setFrecuenciaPago(put.getFrecuenciaPago());
+        if (put.getClienteId() != null) venta.setClienteId(put.getClienteId());
+        if (put.getUserId() != null) venta.setUserId(put.getUserId());
+        if (put.getActivo() != null) venta.setActivo(put.getActivo());
+        if (put.getEntrega() != null) venta.setEntrega(put.getEntrega());
+        if (put.getEstado() != null) venta.setEstado(put.getEstado());
+        if (put.getCuotas() != null) venta.setCuotas(put.getCuotas());
+
+        if (put.getDetalleVentas() != null && !put.getDetalleVentas().isEmpty()) {
+            venta.getDetalleVentas().clear();
+            List<DetalleVenta> nuevosDetalles = put.getDetalleVentas().stream()
+                    .map(this::fromDetallePostDTO)
+                    .peek(detalle -> detalle.setVenta(venta))
+                    .toList();
+            venta.getDetalleVentas().addAll(nuevosDetalles);
+            venta.calcularTotal();
+        }
+        return venta;
+
     }
 
     public DetalleVenta fromDetallePostDTO(DetalleVentaPostDTO postDTO) {

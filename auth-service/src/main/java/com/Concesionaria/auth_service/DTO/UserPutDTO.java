@@ -4,8 +4,6 @@ import com.Concesionaria.auth_service.util.RolUser;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 public class UserPutDTO {
