@@ -4,5 +4,12 @@ server:
 spring:
   application:
     name: config-server
-
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/axelvega483/Microservicios-Concesionaria.git
+          searchPaths: config-data
+          username: ${GIT-USER}
+          password: ${GIT-PASSWORD}
 

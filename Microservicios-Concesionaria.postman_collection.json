@@ -560,6 +560,38 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Config-server",
+			"item": [
+				{
+					"name": "obtner",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"frecuenciaPago\": \"MENSUAL\",\r\n    \"clienteId\": 1,\r\n    \"userId\": 1,\r\n    \"entrega\": 5000.00,\r\n    \"cuotas\": 5,\r\n    \"detalleVentas\": [\r\n        {\r\n            \"vehiculoId\": 1,\r\n            \"cantidad\": 1,\r\n            \"precioUnitario\": 27000.00\r\n        }\r\n    ]\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8086/auth-service/dafault",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8086",
+							"path": [
+								"auth-service",
+								"dafault"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }
