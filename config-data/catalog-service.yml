@@ -1,0 +1,28 @@
+spring:
+  application:
+    name: catalog-service
+  datasource:
+    url: jdbc:mysql://localhost:3306/catalog?serverTimezone=UTC
+    username: root
+    password: root
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8083
+
+app:
+  ruta:
+    imagenes: ./imagenes/vehiculos
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
