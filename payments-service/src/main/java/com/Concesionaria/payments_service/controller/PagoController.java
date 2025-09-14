@@ -31,9 +31,6 @@ public class PagoController {
     private PdfPagoService pdf;
 
 
-    @Value("${app.ruta.PDF}")
-    private String RUTA_PDF;
-
     @PostMapping("/generar")
     public ResponseEntity<?> generarPagos(@RequestBody GenerarPagosRequestDTO request) {
         try {
