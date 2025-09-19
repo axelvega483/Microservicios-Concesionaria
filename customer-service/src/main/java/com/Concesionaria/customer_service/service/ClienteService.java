@@ -45,9 +45,9 @@ public class ClienteService implements IClienteService {
         if (cliente == null) {
             throw new EntityExistsException("El Cliente no existe");
         }
-        cliente=mapper.update(cliente,put);
+        cliente = mapper.update(cliente, put);
         Cliente saved = repo.save(cliente);
-        return  mapper.toDTO(saved);
+        return mapper.toDTO(saved);
     }
 
     @Override
@@ -65,18 +65,14 @@ public class ClienteService implements IClienteService {
     }
 
     public Optional<ClienteGetDTO> findByClienteNoVenta(Integer id, Throwable throwable) {
-        try {
-            Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
-            if (optUser.isPresent()) {
-                ClienteGetDTO dto = mapper.toDTO(optUser.get());
-                dto.setVentas(Collections.emptyList());
-                return Optional.of(dto);
-            }
-            return Optional.empty();
-        } catch (Exception e) {
-            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
-            return Optional.empty();
+        System.err.println("Fallback ejecutado para findByClienteNoVenta(): " + throwable.getMessage());
+        Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
+        if (optUser.isPresent()) {
+            ClienteGetDTO dto = mapper.toDTO(optUser.get());
+            dto.setVentas(Collections.emptyList());
+            return Optional.of(dto);
         }
+        return Optional.empty();
     }
 
     @Override
@@ -95,19 +91,15 @@ public class ClienteService implements IClienteService {
     }
 
     public List<ClienteGetDTO> findByAllClientenoVenta(Throwable throwable) {
-        try {
-            List<Cliente> clientes = repo.findAll();
-            List<ClienteGetDTO> dtos = new ArrayList<>();
-            for (Cliente cliente : clientes) {
-                ClienteGetDTO dto = mapper.toDTO(cliente);
-                dto.setVentas(Collections.emptyList());
-                dtos.add(dto);
-            }
-            return dtos;
-        } catch (Exception e) {
-            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
-            return Collections.emptyList();
+        System.err.println("Fallback ejecutado para findByAllClientenoVenta(): " + throwable.getMessage());
+        List<Cliente> clientes = repo.findAll();
+        List<ClienteGetDTO> dtos = new ArrayList<>();
+        for (Cliente cliente : clientes) {
+            ClienteGetDTO dto = mapper.toDTO(cliente);
+            dto.setVentas(Collections.emptyList());
+            dtos.add(dto);
         }
+        return dtos;
     }
 
     @Override

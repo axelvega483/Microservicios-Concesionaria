@@ -43,18 +43,14 @@ public class UserService implements IUserServicie {
     }
 
     public Optional<UserGetDTO> findByUserNoVenta(Integer id, Throwable throwable) {
-        try {
-            Optional<User> optUser = repo.findById(id).filter(User::getActivo);
-            if (optUser.isPresent()) {
-                UserGetDTO dto = mapper.toDTO(optUser.get());
-                dto.setVentas(Collections.emptyList());
-                return Optional.of(dto);
-            }
-            return Optional.empty();
-        } catch (Exception e) {
-            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
-            return Optional.empty();
+        System.err.println("Fallback ejecutado para findByUserNoVenta(): " + throwable.getMessage());
+        Optional<User> optUser = repo.findById(id).filter(User::getActivo);
+        if (optUser.isPresent()) {
+            UserGetDTO dto = mapper.toDTO(optUser.get());
+            dto.setVentas(Collections.emptyList());
+            return Optional.of(dto);
         }
+        return Optional.empty();
     }
 
     @Override
@@ -73,7 +69,7 @@ public class UserService implements IUserServicie {
     }
 
     public List<UserGetDTO> findAllUserNoVenta(Throwable throwable) {
-        try {
+        System.err.println("Fallback ejecutado para findAllUserNoVenta(): " + throwable.getMessage());
             List<User> usuarios = repo.findAll();
             List<UserGetDTO> dtos = new ArrayList<>();
             for (User user : usuarios) {
@@ -82,10 +78,6 @@ public class UserService implements IUserServicie {
                 dtos.add(dto);
             }
             return dtos;
-        } catch (Exception e) {
-            System.out.println("Error fallback " + e.getMessage() + " " + throwable.getMessage());
-            return Collections.emptyList();
-        }
     }
 
     @Override

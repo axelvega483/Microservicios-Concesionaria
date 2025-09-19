@@ -58,7 +58,7 @@ public class VehiculoService implements IVehiculoService {
         }
         Vehiculo vehiculo = mapper.create(post);
         Vehiculo saved = repo.save(vehiculo);
-       return mapper.toDTO(saved);
+        return mapper.toDTO(saved);
     }
 
     @Override
@@ -92,18 +92,14 @@ public class VehiculoService implements IVehiculoService {
     }
 
     public Optional<VehiculoGetDTO> findByVehiculoNoVenta(Integer id, Throwable throwable) {
-        try {
-            Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::getActivo);
-            if (optVehi.isPresent()) {
-                VehiculoGetDTO dto = mapper.toDTO(optVehi.get());
-                dto.setDetalleVentas(Collections.emptyList());
-                return Optional.of(dto);
-            }
-            return Optional.empty();
-        } catch (Exception e) {
-            System.err.println("Error en fallback findByVehiculoNoVenta: " + e.getMessage() + " " + throwable.getMessage());
-            return Optional.empty();
+        System.err.println("Fallback ejecutado para findByVehiculoNoVenta(): " + throwable.getMessage());
+        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::getActivo);
+        if (optVehi.isPresent()) {
+            VehiculoGetDTO dto = mapper.toDTO(optVehi.get());
+            dto.setDetalleVentas(Collections.emptyList());
+            return Optional.of(dto);
         }
+        return Optional.empty();
     }
 
     @Override
@@ -122,19 +118,15 @@ public class VehiculoService implements IVehiculoService {
     }
 
     public List<VehiculoGetDTO> findByAllVehiculonoVenta(Throwable throwable) {
-        try {
-            List<Vehiculo> vehiculos = repo.findAll();
-            List<VehiculoGetDTO> dtos = new ArrayList<>();
-            for (Vehiculo vehiculo : vehiculos) {
-                VehiculoGetDTO dto = mapper.toDTO(vehiculo);
-                dto.setDetalleVentas(Collections.emptyList());
-                dtos.add(dto);
-            }
-            return dtos;
-        } catch (Exception e) {
-            System.err.println("Error en fallback findByAllVehiculonoVenta: " + e.getMessage() + " " + throwable.getMessage());
-            return Collections.emptyList();
+        System.err.println("Fallback ejecutado para findByAllVehiculonoVenta(): " + throwable.getMessage());
+        List<Vehiculo> vehiculos = repo.findAll();
+        List<VehiculoGetDTO> dtos = new ArrayList<>();
+        for (Vehiculo vehiculo : vehiculos) {
+            VehiculoGetDTO dto = mapper.toDTO(vehiculo);
+            dto.setDetalleVentas(Collections.emptyList());
+            dtos.add(dto);
         }
+        return dtos;
     }
 
     @Override
@@ -247,28 +239,19 @@ public class VehiculoService implements IVehiculoService {
     }
 
     public VehiculoGetDTO eliminarImagenVehiculoFallback(Integer vehiculoId, Integer imagenId, Throwable throwable) {
-        try {
-            Optional<Vehiculo> vehiculoOpt = findEntityByIdVehiculo(vehiculoId);
-            if (vehiculoOpt.isPresent()) {
-                VehiculoGetDTO dto = mapper.toDTO(vehiculoOpt.get());
-
-                List<Imagen> imagenes = imagenService.findByVehiculoId(vehiculoId);
-                dto.setImagenes(imagenes.stream()
-                        .map(img -> new ImagenDTO(img.getId(), img.getNombre()))
-                        .collect(Collectors.toList()));
-
-                dto.setDetalleVentas(Collections.emptyList());
-                return dto;
-            }
-            throw new EntityNotFoundException("Vehículo no encontrado en fallback");
-        } catch (Exception e) {
-            System.err.println("Error en fallback eliminarImagenVehiculo: " + e.getMessage() + " " + throwable.getMessage());
-
-            VehiculoGetDTO dto = new VehiculoGetDTO();
-            dto.setImagenes(Collections.emptyList());
-            dto.setDetalleVentas(Collections.emptyList());
-            return dto;
+        System.err.println("Fallback ejecutado para eliminarImagenVehiculoFallback(): " + throwable.getMessage());
+        Optional<Vehiculo> vehiculoOpt = findEntityByIdVehiculo(vehiculoId);
+        if (vehiculoOpt.isEmpty()) {
+            throw new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId);
         }
+        VehiculoGetDTO dto = mapper.toDTO(vehiculoOpt.get());
+        List<Imagen> imagenes = imagenService.findByVehiculoId(vehiculoId);
+        dto.setImagenes(imagenes.stream()
+                .map(img -> new ImagenDTO(img.getId(), img.getNombre()))
+                .collect(Collectors.toList()));
+        dto.setDetalleVentas(Collections.emptyList());
+
+        return dto;
     }
 
     private MediaType determinarMediaType(String extension) {
