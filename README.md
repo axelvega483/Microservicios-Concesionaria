@@ -1,75 +1,132 @@
-# 🚗 Sistema de Gestión para una Concesionaria (Microservicios)
+<h1 align="center">
+  🚗💨 Sistema de Gestión para Concesionaria (Microservicios)
+</h1>
 
-Sistema de backend distribuido para la administración integral de una concesionaria de vehículos.  
-Permite gestionar vehículos, clientes, ventas y pagos mediante una arquitectura de **microservicios**, optimizando y automatizando los procesos comerciales y financieros con una API REST robusta, extensible y escalable.
+<p align="center">
+  <b>Sistema backend distribuido para administración integral de una concesionaria de vehículos</b>
+  <br>
+  <em>Desarrollado con Spring Boot • MySQL/PostgreSQL • OpenAPI 3</em>
+</p>
+
+<p align="center">
+  <a href="http://localhost:8080/swagger-ui/index.html">
+    <img src="https://img.shields.io/badge/Documentación-SwaggerUI-brightgreen?style=for-the-badge&logo=swagger" alt="Swagger UI">
+  </a>
+  <a href="http://localhost:8080/v3/api-docs">
+    <img src="https://img.shields.io/badge/API-OpenAPI3-orange?style=for-the-badge&logo=openapi-initiative" alt="OpenAPI 3">
+  </a>
+  <img src="https://img.shields.io/badge/Java-17-blue?style=for-the-badge&logo=openjdk" alt="Java 17">
+  <img src="https://img.shields.io/badge/Spring_Boot-3.4.5-brightgreen?style=for-the-badge&logo=springboot" alt="Spring Boot">
+</p>
 
 ---
 
 ## 🌟 Características del Sistema
-- Gestión avanzada de ventas con generación automática de pagos (cuotas o pago único).  
-- Control de estados de ventas y pagos para seguimiento financiero detallado.  
-- Confirmación y anulación de pagos con actualización automática del saldo pendiente.  
-- Relaciones internas sólidas entre entidades de un mismo dominio (ej. `Venta` ↔ `VentaDetalle`).  
-- Uso de **DTOs** para exposición de información entre microservicios y al frontend.  
-- Modularidad y separación de responsabilidades mediante microservicios independientes: `auth-service`,`customer-service`, `sales-service`, `payments-service`, `catalog-service`, `gateway-service` y `eureka-service`.  
+
+<div align="center">
+
+| Característica | Icono | Descripción |
+|----------------|-------|-------------|
+| **Gestión Avanzada de Ventas** | 💰 | Generación automática de pagos (cuotas o pago único) |
+| **Control de Estados** | 📊 | Seguimiento financiero detallado de ventas y pagos |
+| **Confirmación y Anulación** | 🔄 | Actualización automática del saldo pendiente |
+| **Relaciones Sólidas** | 🔗 | Entidades interconectadas como `Venta` ↔ `VentaDetalle` |
+| **DTOs Personalizados** | 🎯 | Exposición de datos desacoplada entre servicios |
+| **Microservicios Independientes** | 🧩 | Separación clara de responsabilidades |
+| **Escalabilidad y Modularidad** | 📦 | Arquitectura preparada para crecer sin fricciones |
+
+</div>
+
+---
+
+## 📦 Microservicios del Sistema
+
+<div align="center">
+
+| Servicio | Icono | Descripción | Endpoints |
+|----------|-------|-------------|-----------|
+| **auth-service** | 🔐 | Gestión de usuarios (ADMIN-EMPLEADO) | `GET/POST/PUT/DELETE /usuario` |
+| **catalog-service** | 🚗 | Inventario de vehículos | `GET/POST/PUT/DELETE /vehiculo` |
+| **customer-service** | 👥 | Gestión de clientes e historial | `GET/POST/PUT /cliente` |
+| **sales-service** | 💰 | Registro de ventas y generación de pagos | `GET/POST /venta` |
+| **payments-service** | 💳 | Confirmación y anulación de pagos | `GET/PUT /pago` |
+| **gateway-service** | 🌐 | Ruteo hacia microservicios | `/api/**` |
+| **eureka-service** | 📡 | Descubrimiento de servicios | `Eureka Dashboard` |
+
+</div>
 
 ---
 
 ## 🛠️ Tecnologías Utilizadas
-- **Back-end (API REST)**  
-- Java 17  
-- Spring Boot  
-  - Spring Web  
-  - Spring Data JPA  
-  - Spring Security (opcional, para futuras integraciones con auth-service)  
-  - Spring Cloud Eureka Client  
-  - Spring Cloud Gateway  
-- Lombok  
-- MySQL / PostgreSQL (configurable)  
-- Maven  
+
+<div align="center">
+
+| Tecnología | Icono | Uso |
+|------------|-------|-----|
+| **Java 17** | <img src="https://img.shields.io/badge/Java-17-blue?style=flat&logo=openjdk" alt="Java 17"> | Lenguaje principal |
+| **Spring Boot** | <img src="https://img.shields.io/badge/Spring_Boot-3.4.5-brightgreen?style=flat&logo=springboot" alt="Spring Boot"> | Framework backend |
+| **Spring Data JPA** | <img src="https://img.shields.io/badge/JPA-Hibernate-59666C?style=flat&logo=hibernate" alt="Spring Data JPA"> | Persistencia ORM |
+| **Spring Cloud** | <img src="https://img.shields.io/badge/Spring_Cloud-Eureka/Gateway-6DB33F?style=flat&logo=spring"> | Eureka Client y Gateway |
+| **MySQL / PostgreSQL** | <img src="https://img.shields.io/badge/SQL-MySQL/PostgreSQL-4479A1?style=flat&logo=mysql" alt="SQL"> | Base de datos relacional |
+| **Lombok** | <img src="https://img.shields.io/badge/Lombok-Automático-FF9800?style=flat&logo=lombok" alt="Lombok"> | Reducción de boilerplate |
+| **Maven** | <img src="https://img.shields.io/badge/Maven-C71A36?style=flat&logo=apache-maven" alt="Maven"> | Gestión de dependencias |
+
+</div>
 
 ---
 
-## 📝 Microservicios y Funcionalidades
-### **auth-service**
-- Gestión de usuarios (ADMIN-EMPLEADO).  
-- CRUD completo: alta, baja, edición y listado.  
--Login 
- 
-### **catalog-service**
-- Gestión de vehículos disponibles en la concesionaria.  
-- CRUD completo: alta, baja, edición y listado.  
-- Información detallada: marca, modelo, año, estado y precio.  
+## 📝 Requerimientos Funcionales
 
-### **customer-service**
-- Gestión de clientes.  
-- Visualización del historial de compras y pagos realizados.  
+<div align="center">
 
-### **sales-service**
-- Registro de ventas con detalle de vehículo y cliente (almacenando solo `clienteId` y `productoId`).  
-- Generación automática de pagos asociados.  
-- Actualización de saldo y estado de la venta.  
+| Servicio | Funcionalidades | Estado |
+|----------|-----------------|--------|
+| **🚗 Vehículos** | CRUD completo • Detalles técnicos | ✅ Implementado |
+| **👥 Clientes** | Gestión y visualización de historial | ✅ Implementado |
+| **🔐 Usuarios** | Roles y autenticación básica | ✅ Implementado |
+| **💰 Ventas** | Registro y generación de pagos | ✅ Implementado |
+| **💳 Pagos** | Confirmación y actualización de estado | ✅ Implementado |
 
-### **payments-service**
-- Confirmación y anulación de pagos.  
-- Actualización automática del saldo pendiente y estado del pago.  
+</div>
 
-### **gateway-service**
-- Puerta de entrada al ecosistema de microservicios desde clientes externos (frontend, Postman, etc.).  
-- Ruteo hacia los microservicios correspondientes.  
+---
 
-### **eureka-service**
-- Registro y descubrimiento de microservicios (Service Discovery).  
-- Permite que todos los servicios se localicen dinámicamente y habilita balanceo de carga y resiliencia.  
+## 📄 Documentación Técnica
+
+<div align="center">
+
+| Recurso | Enlace | Descripción |
+|---------|--------|-------------|
+| **📖 Swagger UI** | [Swagger](http://localhost:8080/swagger-ui/index.html) | Documentación interactiva |
+</div>
 
 ---
 
 ## ⚙️ Requerimientos No Funcionales
-- Validaciones en entidades con mensajes claros y personalizados.  
-- Modularidad y escalabilidad para futuras integraciones (web, mobile, auth-service).  
-- Arquitectura preparada para implementar JWT en el futuro.  
-- Código limpio y documentado siguiendo principios SOLID y buenas prácticas.  
-- Uso de **DTOs** para desacoplar datos internos de la exposición hacia otros servicios o frontend.  
+
+<div align="center">
+
+| Categoría | Especificación | Estado |
+|-----------|----------------|--------|
+| **🛡️ Validaciones** | Mensajes claros y personalizados | ✅ Implementado |
+| **📐 Modularidad** | Separación por microservicio | ✅ Implementado |
+| **🔒 Seguridad** | Preparado para JWT y roles | ✅ Implementado |
+| **📊 Performance** | Consultas optimizadas | ✅ Implementado |
+| **🧼 Código Limpio** | Principios SOLID y buenas prácticas | ✅ Implementado |
+
+</div>
 
 ---
 
+<div align="center">
+
+## 🚀 ¿Listo para Comenzar?
+
+[**📖 Ir a la Documentación Interactiva**](http://localhost:8080/swagger-ui/index.html) • 
+
+**⭐ ¡No olvides darle una estrella al repo si te fue útil!**
+
+---
+*Desarrollado con ❤️ usando Spring Boot y Java 17*
+
+</div>
