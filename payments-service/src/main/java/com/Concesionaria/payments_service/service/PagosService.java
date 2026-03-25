@@ -27,16 +27,12 @@ public class PagosService implements IPagosService {
 
     @Override
     public List<PagosGetDTO> generarPagos(GenerarPagosRequestDTO request) {
-
-
         List<Pagos> pagosGenerados = new ArrayList<>();
-
-        if (request.getFrecuenciaPago() == FrecuenciaPago.UNICO) {
+        if (request.frecuenciaPago() == FrecuenciaPago.UNICO) {
             pagosGenerados.add(crearPagoUnico(request));
         } else {
             pagosGenerados = generarPagosConCuotas(request);
         }
-
         return pagosGenerados.stream()
                 .map(mapper::toDTO)
                 .collect(Collectors.toList());
@@ -45,9 +41,9 @@ public class PagosService implements IPagosService {
 
     private Pagos crearPagoUnico(GenerarPagosRequestDTO request) {
         Pagos pagoUnico = new Pagos();
-        pagoUnico.setVentaId(request.getVentaId());
+        pagoUnico.setVentaId(request.ventaId());
         pagoUnico.setFechaPago(LocalDate.now());
-        pagoUnico.setMonto(request.getTotalVenta());
+        pagoUnico.setMonto(request.totalVenta());
         pagoUnico.setEstado(EstadoPagos.PENDIENTE);
         pagoUnico.setMetodoPago(MetodoPago.PENDIENTE);
         pagoUnico.setActivo(true);
@@ -59,9 +55,9 @@ public class PagosService implements IPagosService {
         List<Pagos> pagos = new ArrayList<>();
         LocalDate fechaBase = LocalDate.now();
 
-        BigDecimal montoEntrega = BigDecimal.valueOf(request.getEntrega() != null ? request.getEntrega() : 0.0);
-        BigDecimal montoRestante = request.getTotalVenta().subtract(montoEntrega);
-        int cantidadCuotas = (request.getCuotas() != null && request.getCuotas() > 0) ? request.getCuotas() : 1;
+        BigDecimal montoEntrega = BigDecimal.valueOf(request.entrega() != null ? request.entrega() : 0.0);
+        BigDecimal montoRestante = request.totalVenta().subtract(montoEntrega);
+        int cantidadCuotas = (request.cuotas() != null && request.cuotas() > 0) ? request.cuotas() : 1;
         BigDecimal montoPorCuota = montoRestante.divide(BigDecimal.valueOf(cantidadCuotas), 2, RoundingMode.HALF_UP);
 
         if (montoEntrega.compareTo(BigDecimal.ZERO) > 0) {
@@ -83,7 +79,7 @@ public class PagosService implements IPagosService {
 
     private Pagos crearPagoInicial(GenerarPagosRequestDTO request, LocalDate fechaBase, BigDecimal montoEntrega) {
         Pagos pagoInicial = new Pagos();
-        pagoInicial.setVentaId(request.getVentaId());
+        pagoInicial.setVentaId(request.ventaId());
         pagoInicial.setFechaPago(fechaBase);
         pagoInicial.setMonto(montoEntrega);
         pagoInicial.setEstado(EstadoPagos.PENDIENTE);
@@ -96,7 +92,7 @@ public class PagosService implements IPagosService {
                              int totalCuotas, BigDecimal montoRestante,
                              BigDecimal montoPorCuota, BigDecimal sumaCuotas) {
         Pagos cuota = new Pagos();
-        cuota.setVentaId(request.getVentaId());
+        cuota.setVentaId(request.ventaId());
         cuota.setEstado(EstadoPagos.PENDIENTE);
         cuota.setMetodoPago(MetodoPago.PENDIENTE);
         cuota.setFechaPago(fechaBase.plusMonths(index + 1));
@@ -121,9 +117,7 @@ public class PagosService implements IPagosService {
 
     @Override
     public List<PagosGetDTO> findAll() {
-        return repo.findAll().stream()
-                .map(mapper::toDTO)
-                .collect(Collectors.toList());
+        return mapper.toDTOList(repo.findAll());
     }
 
     @Override
@@ -134,26 +128,22 @@ public class PagosService implements IPagosService {
     }
 
     @Override
-    public List<PagosGetDTO> getPagosPorVentas(List<Integer> ventaIds) {
-        return repo.findByVentaIdIn(ventaIds).stream()
+    public List<PagosGetDTO> getPagosPorVenta(Integer ventaId) {
+        return repo.findByVentaId(ventaId).stream()
                 .map(mapper::toDTO)
                 .collect(Collectors.toList());
     }
-
 
     @Override
     @Transactional
     public PagosGetDTO confirmarPago(Integer id, MetodoPago metodoPago) {
         Pagos pago = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pago no encontrado con ID: " + id));
-
         pago.setEstado(EstadoPagos.PAGADO);
         pago.setMetodoPago(metodoPago);
         pago.setFechaPago(LocalDate.now());
         pago.setActivo(Boolean.FALSE);
         Pagos saved = repo.save(pago);
-
-
         return mapper.toDTO(saved);
     }
 
@@ -163,7 +153,7 @@ public class PagosService implements IPagosService {
         Pagos pago = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pago no encontrado con ID: " + id));
 
-        pago = mapper.update(pago, putDTO);
+        mapper.fromUpdateDTO(pago, putDTO);
         Pagos saved = repo.save(pago);
         return mapper.toDTO(saved);
     }
@@ -179,6 +169,13 @@ public class PagosService implements IPagosService {
         pago.setActivo(Boolean.TRUE);
         Pagos saved = repo.save(pago);
         return mapper.toDTO(saved);
+    }
+
+    @Override
+    public void anularPago(Integer pagoId) {
+        Pagos pagos = repo.findById(pagoId)
+                .orElseThrow(() -> new RuntimeException("Pago no encontrado con ID: " + pagoId));
+        repo.delete(pagos);
     }
 
     // ========== MÉTODOS AUXILIARES ==========

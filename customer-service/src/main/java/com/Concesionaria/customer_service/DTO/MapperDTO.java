@@ -3,32 +3,53 @@ package com.Concesionaria.customer_service.DTO;
 import com.Concesionaria.customer_service.model.Cliente;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
+
 @Component
 public class MapperDTO {
+    public ClienteGetDTO toDTO(Cliente cliente, List<ClienteVentaDTO> ventas) {
+        return new ClienteGetDTO(
+                cliente.getId(),
+                cliente.getNombre(),
+                cliente.getEmail(),
+                cliente.getDni(),
+                cliente.isActivo(),
+                ventas
+
+        );
+
+    }
+
     public ClienteGetDTO toDTO(Cliente cliente) {
-        ClienteGetDTO dto = new ClienteGetDTO();
-        dto.setId(cliente.getId());
-        dto.setActivo(cliente.getActivo());
-        dto.setDni(cliente.getDni());
-        dto.setEmail(cliente.getEmail());
-        dto.setNombre(cliente.getNombre());
-        return dto;
+        return new ClienteGetDTO(
+                cliente.getId(),
+                cliente.getNombre(),
+                cliente.getEmail(),
+                cliente.getDni(),
+                cliente.isActivo(),
+                Collections.emptyList()
+
+        );
+
     }
 
-    public Cliente create(ClientePostDTO post) {
-        Cliente cliente = new Cliente();
-        cliente.setActivo(Boolean.TRUE);
-        cliente.setDni(post.getDni());
-        cliente.setEmail(post.getEmail());
-        cliente.setNombre(post.getNombre());
-        return cliente;
+    public Cliente toEntity(ClientePostDTO post) {
+        return Cliente.builder()
+                .dni(post.dni())
+                .email(post.email())
+                .nombre(post.nombre())
+                .activo(Boolean.TRUE)
+                .build();
     }
 
-    public Cliente update(Cliente cliente, ClientePutDTO put) {
-        if (put.getActivo() != null) cliente.setActivo(put.getActivo());
-        if (put.getDni() != null) cliente.setDni(put.getDni());
-        if (put.getEmail() != null) cliente.setEmail(put.getEmail());
-        if (put.getNombre() != null) cliente.setNombre(put.getNombre());
-        return cliente;
+    public void fromUpdateDTO(Cliente cliente, ClientePutDTO put) {
+        if (put.dni() != null) cliente.setDni(put.dni());
+        if (put.email() != null) cliente.setEmail(put.email());
+        if (put.nombre() != null) cliente.setNombre(put.nombre());
+        if(put.activo()!=null) cliente.setActivo(put.activo());
+    }
+    public List<ClienteGetDTO> toDTOList(List<Cliente> clientes) {
+        return clientes.stream().filter(Cliente::isActivo).map(this::toDTO).toList();
     }
 }

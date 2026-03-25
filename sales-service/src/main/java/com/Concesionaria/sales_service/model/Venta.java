@@ -8,10 +8,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -19,6 +16,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
@@ -59,7 +57,7 @@ public class Venta implements Serializable {
     private Integer userId;
 
     @Column
-    private Double entrega;
+    private BigDecimal entrega;
 
     @Column(name = "estado", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -69,7 +67,7 @@ public class Venta implements Serializable {
     private Integer cuotas;
 
     @Column(nullable = false)
-    private Boolean activo = true;
+    private boolean activo;
 
     public void calcularTotal() {
         this.total = detalleVentas.stream()
@@ -77,13 +75,8 @@ public class Venta implements Serializable {
                         .multiply(BigDecimal.valueOf(detalle.getCantidad())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (this.entrega != null && this.entrega > this.total.doubleValue()) {
-            throw new IllegalArgumentException(
-                    String.format("La entrega ($%.2f) no puede ser mayor al total de la venta ($%.2f)",
-                            this.entrega, this.total.doubleValue())
-            );
-        }
     }
+
     public void actualizarSaldo(BigDecimal montoPagado) {
         if (total.subtract(montoPagado).compareTo(BigDecimal.ZERO) <= 0) {
             this.estado = EstadoVenta.FINALIZADO;

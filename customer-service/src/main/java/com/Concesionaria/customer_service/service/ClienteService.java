@@ -25,15 +25,15 @@ public class ClienteService implements IClienteService {
 
     @Override
     public Boolean existe(String dni) {
-        return repo.findByDniAndActivo(dni).isPresent();
+        return repo.existsByDniAndActivoTrue(dni);
     }
 
     @Override
     public ClienteGetDTO create(ClientePostDTO post) {
-        if (existe(post.getDni())) {
+        if (existe(post.dni())) {
             throw new EntityExistsException("El Cliente ya existe");
         }
-        Cliente cliente = mapper.create(post);
+        Cliente cliente = mapper.toEntity(post);
         Cliente saved = repo.save(cliente);
         return mapper.toDTO(saved);
     }
@@ -45,7 +45,7 @@ public class ClienteService implements IClienteService {
         if (cliente == null) {
             throw new EntityExistsException("El Cliente no existe");
         }
-        cliente = mapper.update(cliente, put);
+        mapper.fromUpdateDTO(cliente, put);
         Cliente saved = repo.save(cliente);
         return mapper.toDTO(saved);
     }
@@ -54,11 +54,11 @@ public class ClienteService implements IClienteService {
     @CircuitBreaker(name = "sales-service", fallbackMethod = "findByClienteNoVenta")
     @Retry(name = "sales-service")
     public Optional<ClienteGetDTO> findById(Integer id) {
-        Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
+        Optional<Cliente> optUser = repo.findById(id).filter(Cliente::isActivo);
         if (optUser.isPresent()) {
-            ClienteGetDTO dto = mapper.toDTO(optUser.get());
-            List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(dto.getId());
-            dto.setVentas(ventas);
+            Cliente cliente = optUser.get();
+            List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(cliente.getId());
+            ClienteGetDTO dto = mapper.toDTO(cliente, ventas);
             return Optional.of(dto);
         }
         return Optional.empty();
@@ -66,49 +66,29 @@ public class ClienteService implements IClienteService {
 
     public Optional<ClienteGetDTO> findByClienteNoVenta(Integer id, Throwable throwable) {
         System.err.println("Fallback ejecutado para findByClienteNoVenta(): " + throwable.getMessage());
-        Optional<Cliente> optUser = repo.findById(id).filter(Cliente::getActivo);
+        Optional<Cliente> optUser = repo.findById(id).filter(Cliente::isActivo);
         if (optUser.isPresent()) {
-            ClienteGetDTO dto = mapper.toDTO(optUser.get());
-            dto.setVentas(Collections.emptyList());
+            Cliente cliente = optUser.get();
+            ClienteGetDTO dto = mapper.toDTO(cliente);
             return Optional.of(dto);
         }
         return Optional.empty();
     }
 
     @Override
-    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByAllClientenoVenta")
-    @Retry(name = "sales-service")
     public List<ClienteGetDTO> findAll() {
-        List<Cliente> clientes = repo.findAll();
-        List<ClienteGetDTO> dtos = new ArrayList<>();
-        for (Cliente cliente : clientes) {
-            ClienteGetDTO dto = mapper.toDTO(cliente);
-            List<ClienteVentaDTO> ventas = venta.obtenerVentasPorCliente(cliente.getId());
-            dto.setVentas(ventas);
-            dtos.add(dto);
-        }
-        return dtos;
-    }
-
-    public List<ClienteGetDTO> findByAllClientenoVenta(Throwable throwable) {
-        System.err.println("Fallback ejecutado para findByAllClientenoVenta(): " + throwable.getMessage());
-        List<Cliente> clientes = repo.findAll();
-        List<ClienteGetDTO> dtos = new ArrayList<>();
-        for (Cliente cliente : clientes) {
-            ClienteGetDTO dto = mapper.toDTO(cliente);
-            dto.setVentas(Collections.emptyList());
-            dtos.add(dto);
-        }
-        return dtos;
+      return mapper.toDTOList(repo.findAll());
     }
 
     @Override
-    public void delete(Integer id) {
+    public ClienteGetDTO delete(Integer id) {
         Optional<Cliente> clienteOptional = repo.findById(id);
+        Cliente cliente = null;
         if (clienteOptional.isPresent()) {
-            Cliente cliente = clienteOptional.get();
+            cliente = clienteOptional.get();
             cliente.setActivo(Boolean.FALSE);
             repo.save(cliente);
         }
+        return mapper.toDTO(cliente);
     }
 }

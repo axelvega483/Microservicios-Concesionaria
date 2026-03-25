@@ -9,6 +9,8 @@ import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -17,12 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
+/*
 @Service
 @Transactional
 public class VehiculoService implements IVehiculoService {
@@ -49,14 +49,14 @@ public class VehiculoService implements IVehiculoService {
 
     @Override
     public VehiculoGetDTO createVehiculo(VehiculoPostDTO post) {
-        if (existeVehiculo(post.getMarca(), post.getModelo(), post.getAnioModelo())) {
-            Optional<Vehiculo> vehiculoOptional = buscarVehiculo(post.getMarca(), post.getModelo(), post.getAnioModelo());
+        if (existeVehiculo(post.marca(), post.modelo(), post.anioModelo())) {
+            Optional<Vehiculo> vehiculoOptional = buscarVehiculo(post.marca(), post.modelo(), post.anioModelo());
             Vehiculo vehiculo = vehiculoOptional.get();
             Integer stock = vehiculo.getStock();
-            vehiculo.setStock(stock + post.getStock());
+            vehiculo.setStock(stock + post.stock());
             throw new EntityExistsException("El Vehiculo ya existe, se incremento stock");
         }
-        Vehiculo vehiculo = mapper.create(post);
+        Vehiculo vehiculo = mapper.toEntity(post);
         Vehiculo saved = repo.save(vehiculo);
         return mapper.toDTO(saved);
     }
@@ -67,7 +67,8 @@ public class VehiculoService implements IVehiculoService {
         if (vehiculo == null) {
             throw new EntityExistsException("El Vehiculo no existe");
         }
-        vehiculo = mapper.update(vehiculo, put);
+        mapper.update(vehiculo, put);
+        vehiculo.setActivo(true);
         Vehiculo saved = repo.save(vehiculo);
         return mapper.toDTO(saved);
     }
@@ -77,15 +78,11 @@ public class VehiculoService implements IVehiculoService {
     @CircuitBreaker(name = "sales-service", fallbackMethod = "findByVehiculoNoVenta")
     @Retry(name = "sales-service")
     public Optional<VehiculoGetDTO> findByIdVehiculo(Integer id) {
-        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::getActivo);
+        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::isActivo);
         if (optVehi.isPresent()) {
-            VehiculoGetDTO dto = mapper.toDTO(optVehi.get());
-            List<Imagen> imagenes = imagenService.findByVehiculoId(id);
-            dto.setImagenes(imagenes.stream()
-                    .map(img -> new ImagenDTO(img.getId(), img.getNombre()))
-                    .collect(Collectors.toList()));
-            List<VehiculoVentaDetalleDTO> detalleVentas = venta.obtenerVentasPorVehiculo(dto.getId());
-            dto.setDetalleVentas(detalleVentas);
+            Vehiculo vehiculo = optVehi.get();
+            List<VehiculoVentaDetalleDTO> detalleVentas = venta.obtenerVentasPorVehiculo(vehiculo.getId());
+            VehiculoGetDTO dto = mapper.toDTO(vehiculo, detalleVentas);
             return Optional.of(dto);
         }
         return Optional.empty();
@@ -93,40 +90,29 @@ public class VehiculoService implements IVehiculoService {
 
     public Optional<VehiculoGetDTO> findByVehiculoNoVenta(Integer id, Throwable throwable) {
         System.err.println("Fallback ejecutado para findByVehiculoNoVenta(): " + throwable.getMessage());
-        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::getActivo);
+        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::isActivo);
         if (optVehi.isPresent()) {
-            VehiculoGetDTO dto = mapper.toDTO(optVehi.get());
-            dto.setDetalleVentas(Collections.emptyList());
+            Vehiculo vehiculo = optVehi.get();
+            VehiculoGetDTO dto = mapper.toDTO(vehiculo);
             return Optional.of(dto);
         }
         return Optional.empty();
     }
 
     @Override
-    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByAllVehiculonoVenta")
-    @Retry(name = "sales-service")
-    public List<VehiculoGetDTO> findAllVehiculo() {
-        List<Vehiculo> vehiculos = repo.findAllActivo();
-        List<VehiculoGetDTO> dtos = new ArrayList<>();
-        for (Vehiculo vehiculo : vehiculos) {
+    public Optional<VehiculoGetDTO> vehiculoId(Integer id) {
+        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::isActivo);
+        if (optVehi.isPresent()) {
+            Vehiculo vehiculo = optVehi.get();
             VehiculoGetDTO dto = mapper.toDTO(vehiculo);
-            List<VehiculoVentaDetalleDTO> detalleVenta = venta.obtenerVentasPorVehiculo(vehiculo.getId());
-            dto.setDetalleVentas(detalleVenta);
-            dtos.add(dto);
+            return Optional.of(dto);
         }
-        return dtos;
+        return Optional.empty();
     }
 
-    public List<VehiculoGetDTO> findByAllVehiculonoVenta(Throwable throwable) {
-        System.err.println("Fallback ejecutado para findByAllVehiculonoVenta(): " + throwable.getMessage());
-        List<Vehiculo> vehiculos = repo.findAll();
-        List<VehiculoGetDTO> dtos = new ArrayList<>();
-        for (Vehiculo vehiculo : vehiculos) {
-            VehiculoGetDTO dto = mapper.toDTO(vehiculo);
-            dto.setDetalleVentas(Collections.emptyList());
-            dtos.add(dto);
-        }
-        return dtos;
+    @Override
+    public List<VehiculoGetDTO> findAllVehiculo() {
+        return mapper.toDTOList(repo.findAll());
     }
 
     @Override
@@ -139,8 +125,25 @@ public class VehiculoService implements IVehiculoService {
         }
     }
 
+    @Override
+    public VehiculoGetDTO incrementarStock(Integer vehiculoId, Integer cantidad) {
+        Vehiculo vehiculo = repo.findById(vehiculoId)
+                .orElseThrow(() -> new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId));
+        vehiculo.setStock(vehiculo.getStock() + cantidad);
+        Vehiculo vehiculoActualizado = repo.save(vehiculo);
+        return mapper.toDTO(vehiculoActualizado);
+    }
+    @Override
+    public VehiculoGetDTO descontarStock(Integer vehiculoId, Integer cantidad) {
+        Vehiculo vehiculo = repo.findById(vehiculoId)
+                .orElseThrow(() -> new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId));
+        vehiculo.setStock(vehiculo.getStock() - cantidad);
+        Vehiculo vehiculoActualizado = repo.save(vehiculo);
+        return mapper.toDTO(vehiculoActualizado);
+    }
+
     public Optional<Vehiculo> findEntityByIdVehiculo(Integer id) {
-        return repo.findById(id).filter(Vehiculo::getActivo);
+        return repo.findById(id).filter(Vehiculo::isActivo);
     }
 
     @Override
@@ -193,65 +196,29 @@ public class VehiculoService implements IVehiculoService {
     }
 
     @Override
-    @CircuitBreaker(name = "sales-service", fallbackMethod = "eliminarImagenVehiculoFallback")
-    @Retry(name = "sales-service")
     public VehiculoGetDTO eliminarImagenVehiculo(Integer vehiculoId, Integer imagenId) {
-        Optional<Vehiculo> vehiculoOpt = findEntityByIdVehiculo(vehiculoId);
-        if (vehiculoOpt.isEmpty()) {
-            throw new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId);
-        }
-
-        Vehiculo vehiculo = vehiculoOpt.get();
-
-        Optional<Imagen> imagenOpt = vehiculo.getImagenes().stream()
+        Vehiculo vehiculo = findEntityByIdVehiculo(vehiculoId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Vehículo no encontrado con ID: " + vehiculoId));
+        Imagen imagen = vehiculo.getImagenes()
+                .stream()
                 .filter(img -> img.getId().equals(imagenId))
-                .findFirst();
-
-        if (imagenOpt.isEmpty()) {
-            throw new EntityNotFoundException("Imagen no encontrada en el vehículo");
-        }
-
-        Imagen imagen = imagenOpt.get();
-
-        imagenService.eliminarArchivoImagen(imagen.getNombre());
-
-        vehiculo.getImagenes().remove(imagen);
-        repo.save(vehiculo);
-
-        imagenService.delete(imagenId);
-        Vehiculo vehiculoActualizado = findEntityByIdVehiculo(vehiculoId)
-                .orElseThrow(() -> new EntityNotFoundException("Error al obtener vehículo actualizado"));
-        VehiculoGetDTO dto = mapper.toDTO(vehiculoActualizado);
-
-        List<Imagen> imagenes = imagenService.findByVehiculoId(vehiculoId);
-        dto.setImagenes(imagenes.stream()
-                .map(img -> new ImagenDTO(img.getId(), img.getNombre()))
-                .collect(Collectors.toList()));
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Imagen no encontrada en el vehículo con ID: " + imagenId));
 
         try {
-            List<VehiculoVentaDetalleDTO> detalleVentas = venta.obtenerVentasPorVehiculo(vehiculoId);
-            dto.setDetalleVentas(detalleVentas);
+            imagenService.eliminarArchivoImagen(imagen.getNombre());
         } catch (Exception e) {
-            dto.setDetalleVentas(Collections.emptyList());
+            System.err.println("Error al eliminar archivo de imagen: " + e.getMessage());
+
         }
+        imagenService.delete(imagenId);
+        vehiculo.getImagenes().removeIf(img -> img.getId().equals(imagenId));
 
-        return dto;
-    }
+        Vehiculo vehiculoActualizado = repo.save(vehiculo);
 
-    public VehiculoGetDTO eliminarImagenVehiculoFallback(Integer vehiculoId, Integer imagenId, Throwable throwable) {
-        System.err.println("Fallback ejecutado para eliminarImagenVehiculoFallback(): " + throwable.getMessage());
-        Optional<Vehiculo> vehiculoOpt = findEntityByIdVehiculo(vehiculoId);
-        if (vehiculoOpt.isEmpty()) {
-            throw new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId);
-        }
-        VehiculoGetDTO dto = mapper.toDTO(vehiculoOpt.get());
-        List<Imagen> imagenes = imagenService.findByVehiculoId(vehiculoId);
-        dto.setImagenes(imagenes.stream()
-                .map(img -> new ImagenDTO(img.getId(), img.getNombre()))
-                .collect(Collectors.toList()));
-        dto.setDetalleVentas(Collections.emptyList());
-
-        return dto;
+        return mapper.toDTO(vehiculoActualizado);
     }
 
     private MediaType determinarMediaType(String extension) {
@@ -263,4 +230,293 @@ public class VehiculoService implements IVehiculoService {
         };
     }
 
+}
+*/
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Service
+@Transactional
+public class VehiculoService implements IVehiculoService {
+
+    private static final Logger log = LoggerFactory.getLogger(VehiculoService.class);
+
+    @Autowired
+    private VehiculoRepository repo;
+
+    @Autowired
+    private ImagenService imagenService;
+
+    @Autowired
+    private VentaFeignClient venta;
+
+    @Autowired
+    private MapperDTO mapper;
+
+    // Métodos auxiliares privados
+    private Boolean existeVehiculo(String marca, String modelo, Integer anioModelo) {
+        return repo.findByMarcaAndModeloAndAnioModeloAndActivoTrue(marca, modelo, anioModelo).isPresent();
+    }
+
+    private Optional<Vehiculo> buscarVehiculo(String marca, String modelo, Integer anioModelo) {
+        return repo.findByMarcaAndModeloAndAnioModeloAndActivoTrue(marca, modelo, anioModelo);
+    }
+
+    @Override
+    public VehiculoGetDTO createVehiculo(VehiculoPostDTO post) {
+        log.info("Creando nuevo vehículo: {} {} {}", post.marca(), post.modelo(), post.anioModelo());
+
+        if (existeVehiculo(post.marca(), post.modelo(), post.anioModelo())) {
+            log.warn("Vehículo ya existe, incrementando stock: {} {} {}", post.marca(), post.modelo(), post.anioModelo());
+            Vehiculo vehiculo = buscarVehiculo(post.marca(), post.modelo(), post.anioModelo()).get();
+            Integer nuevoStock = vehiculo.getStock() + post.stock();
+            vehiculo.setStock(nuevoStock);
+            Vehiculo saved = repo.save(vehiculo);
+            log.info("Stock incrementado de {} a {} para vehículo ID: {}",
+                    vehiculo.getStock() - post.stock(), nuevoStock, saved.getId());
+            return mapper.toDTO(saved);
+        }
+
+        Vehiculo vehiculo = mapper.toEntity(post);
+        Vehiculo saved = repo.save(vehiculo);
+        log.info("Vehículo creado exitosamente con ID: {}", saved.getId());
+        return mapper.toDTO(saved);
+    }
+
+    @Override
+    public VehiculoGetDTO updateVehiculo(Integer id, VehiculoPutDTO put) {
+        log.info("Actualizando vehículo con ID: {}", id);
+
+        Vehiculo vehiculo = repo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("El vehículo con ID " + id + " no existe"));
+
+        mapper.update(vehiculo, put);
+        // Mantener el estado activo si estaba activo, no forzar a true
+            vehiculo.setActivo(true);
+
+
+        Vehiculo saved = repo.save(vehiculo);
+        log.info("Vehículo actualizado exitosamente: {}", id);
+        return mapper.toDTO(saved);
+    }
+
+    @Override
+    @CircuitBreaker(name = "sales-service", fallbackMethod = "findByIdVehiculoFallback")
+    @Retry(name = "sales-service")
+    public Optional<VehiculoGetDTO> findByIdVehiculo(Integer id) {
+        log.info("Buscando vehículo con ID: {} (con ventas)", id);
+
+        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::isActivo);
+        if (optVehi.isPresent()) {
+            Vehiculo vehiculo = optVehi.get();
+            try {
+                List<VehiculoVentaDetalleDTO> detalleVentas = venta.obtenerVentasPorVehiculo(vehiculo.getId());
+                VehiculoGetDTO dto = mapper.toDTO(vehiculo, detalleVentas);
+                return Optional.of(dto);
+            } catch (Exception e) {
+                log.error("Error al obtener ventas para vehículo {}: {}", id, e.getMessage());
+                // Fallback manual si falla el feign
+                return Optional.of(mapper.toDTO(vehiculo));
+            }
+        }
+        return Optional.empty();
+    }
+
+    public Optional<VehiculoGetDTO> findByIdVehiculoFallback(Integer id, Throwable throwable) {
+        log.warn("Fallback ejecutado para findByIdVehiculo({}): {}", id, throwable.getMessage());
+
+        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::isActivo);
+        if (optVehi.isPresent()) {
+            Vehiculo vehiculo = optVehi.get();
+            VehiculoGetDTO dto = mapper.toDTO(vehiculo);
+            return Optional.of(dto);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<VehiculoGetDTO> vehiculoId(Integer id) {
+        log.debug("Buscando vehículo con ID: {} (sin ventas)", id);
+
+        Optional<Vehiculo> optVehi = repo.findById(id).filter(Vehiculo::isActivo);
+        if (optVehi.isPresent()) {
+            Vehiculo vehiculo = optVehi.get();
+            VehiculoGetDTO dto = mapper.toDTO(vehiculo);
+            return Optional.of(dto);
+        }
+        return Optional.empty();
+    }
+
+    @Override
+    public List<VehiculoGetDTO> findAllVehiculo() {
+        log.debug("Obteniendo todos los vehículos activos");
+        List<Vehiculo> vehiculos = repo.findByActivoTrue();
+        return mapper.toDTOList(vehiculos);
+    }
+
+    @Override
+    public void deleteByIdVehiculo(Integer id) {
+        log.info("Eliminando (soft delete) vehículo con ID: {}", id);
+
+        Optional<Vehiculo> vehiOpt = repo.findById(id);
+        if (vehiOpt.isPresent()) {
+            Vehiculo vehiculo = vehiOpt.get();
+            vehiculo.setActivo(Boolean.FALSE);
+            repo.save(vehiculo);
+            log.info("Vehículo {} marcado como inactivo", id);
+        } else {
+            log.warn("Intento de eliminar vehículo inexistente: {}", id);
+            throw new EntityNotFoundException("Vehículo no encontrado con ID: " + id);
+        }
+    }
+
+    @Override
+    public VehiculoGetDTO incrementarStock(Integer vehiculoId, Integer cantidad) {
+        log.info("Incrementando stock del vehículo {} en {} unidades", vehiculoId, cantidad);
+
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad a incrementar debe ser positiva");
+        }
+
+        Vehiculo vehiculo = repo.findById(vehiculoId)
+                .orElseThrow(() -> new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId));
+
+        Integer stockAnterior = vehiculo.getStock();
+        vehiculo.setStock(stockAnterior + cantidad);
+        Vehiculo vehiculoActualizado = repo.save(vehiculo);
+
+        log.info("Stock actualizado: {} → {} para vehículo {}", stockAnterior, vehiculo.getStock(), vehiculoId);
+        return mapper.toDTO(vehiculoActualizado);
+    }
+
+    @Override
+    public VehiculoGetDTO descontarStock(Integer vehiculoId, Integer cantidad) {
+        log.info("Descontando stock del vehículo {} en {} unidades", vehiculoId, cantidad);
+
+        if (cantidad <= 0) {
+            throw new IllegalArgumentException("La cantidad a descontar debe ser positiva");
+        }
+
+        Vehiculo vehiculo = repo.findById(vehiculoId)
+                .orElseThrow(() -> new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId));
+
+        Integer stockAnterior = vehiculo.getStock();
+        if (stockAnterior < cantidad) {
+            throw new IllegalArgumentException(
+                    String.format("Stock insuficiente para vehículo ID %d. Stock actual: %d, Cantidad solicitada: %d",
+                            vehiculoId, stockAnterior, cantidad)
+            );
+        }
+
+        vehiculo.setStock(stockAnterior - cantidad);
+        Vehiculo vehiculoActualizado = repo.save(vehiculo);
+
+        log.info("Stock actualizado: {} → {} para vehículo {}", stockAnterior, vehiculo.getStock(), vehiculoId);
+        return mapper.toDTO(vehiculoActualizado);
+    }
+
+    public Optional<Vehiculo> findEntityByIdVehiculo(Integer id) {
+        return repo.findById(id).filter(Vehiculo::isActivo);
+    }
+
+    @Override
+    public VehiculoGetDTO subirImagenesVehiculo(Integer vehiculoId, MultipartFile[] imagenes) {
+        log.info("Subiendo {} imágenes para vehículo ID: {}", imagenes.length, vehiculoId);
+
+        Optional<Vehiculo> vehiculoOpt = findEntityByIdVehiculo(vehiculoId);
+        if (vehiculoOpt.isEmpty()) {
+            throw new EntityNotFoundException("Vehículo no encontrado con ID: " + vehiculoId);
+        }
+
+        Vehiculo vehiculo = vehiculoOpt.get();
+        List<Imagen> imagenesGuardadas = imagenService.procesarImagenes(imagenes, vehiculo);
+
+        vehiculo.getImagenes().addAll(imagenesGuardadas);
+        Vehiculo vehiculoActualizado = repo.save(vehiculo);
+
+        log.info("Imágenes subidas exitosamente para vehículo {}", vehiculoId);
+        return mapper.toDTO(vehiculoActualizado);
+    }
+
+    @Override
+    public ResponseEntity<Resource> obtenerImagen(Integer vehiculoId, Integer imagenId) {
+        log.debug("Obteniendo imagen {} para vehículo {}", imagenId, vehiculoId);
+
+        try {
+            Optional<Imagen> imagenOpt = imagenService.findById(imagenId);
+            if (imagenOpt.isEmpty()) {
+                log.warn("Imagen no encontrada: {}", imagenId);
+                return ResponseEntity.notFound().build();
+            }
+
+            Imagen imagen = imagenOpt.get();
+            if (!imagen.getVehiculo().getId().equals(vehiculoId)) {
+                log.warn("Imagen {} no pertenece al vehículo {}", imagenId, vehiculoId);
+                return ResponseEntity.notFound().build();
+            }
+
+            Resource recurso = imagenService.obtenerArchivoImagen(imagen.getNombre());
+
+            if (!recurso.exists() || !recurso.isReadable()) {
+                log.error("Archivo de imagen no legible o no existe: {}", imagen.getNombre());
+                return ResponseEntity.notFound().build();
+            }
+
+            String extension = imagenService.obtenerExtensionArchivo(imagen.getNombre());
+            MediaType mediaType = determinarMediaType(extension);
+
+            return ResponseEntity.ok()
+                    .contentType(mediaType)
+                    .body(recurso);
+
+        } catch (IOException e) {
+            log.error("Error al obtener imagen: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        } catch (Exception e) {
+            log.error("Error inesperado al obtener imagen: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @Override
+    public VehiculoGetDTO eliminarImagenVehiculo(Integer vehiculoId, Integer imagenId) {
+        log.info("Eliminando imagen {} del vehículo {}", imagenId, vehiculoId);
+
+        Vehiculo vehiculo = findEntityByIdVehiculo(vehiculoId)
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Vehículo no encontrado con ID: " + vehiculoId));
+
+        Imagen imagen = vehiculo.getImagenes()
+                .stream()
+                .filter(img -> img.getId().equals(imagenId))
+                .findFirst()
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Imagen no encontrada en el vehículo con ID: " + imagenId));
+
+        try {
+            imagenService.eliminarArchivoImagen(imagen.getNombre());
+            log.debug("Archivo de imagen eliminado: {}", imagen.getNombre());
+        } catch (Exception e) {
+            log.error("Error al eliminar archivo de imagen: {}", e.getMessage(), e);
+            // Continuamos con la eliminación lógica aunque falle la física
+        }
+
+        imagenService.delete(imagenId);
+        vehiculo.getImagenes().removeIf(img -> img.getId().equals(imagenId));
+
+        Vehiculo vehiculoActualizado = repo.save(vehiculo);
+        log.info("Imagen {} eliminada del vehículo {}", imagenId, vehiculoId);
+
+        return mapper.toDTO(vehiculoActualizado);
+    }
+
+    private MediaType determinarMediaType(String extension) {
+        return switch (extension.toLowerCase()) {
+            case "png" -> MediaType.IMAGE_PNG;
+            case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+            case "gif" -> MediaType.IMAGE_GIF;
+            default -> MediaType.APPLICATION_OCTET_STREAM;
+        };
+    }
 }

@@ -1,26 +1,21 @@
 package com.Concesionaria.auth_service.DTO;
 
 import com.Concesionaria.auth_service.util.RolUser;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.List;
 
-@Getter
-@Setter
-public class UserGetDTO {
-    private Integer id;
+public record UserGetDTO(
+        Integer id,
 
-    private String nombre;
+         String nombre,
 
-    private String email;
+         String email,
 
-    private String dni;
+         String dni,
 
-    private RolUser rol;
+         RolUser rol,
 
-    private Boolean activo;
+         boolean activo,
 
-    private List<UserVentaDTO> ventas;
+         List<UserVentaDTO> ventas) {
 
 }

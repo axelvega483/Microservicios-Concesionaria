@@ -11,61 +11,90 @@ import java.util.stream.Collectors;
 
 @Component
 public class MapperDTO {
-    public VehiculoGetDTO toDTO(Vehiculo vehiculo) {
-        VehiculoGetDTO dto = new VehiculoGetDTO();
-        dto.setId(vehiculo.getId());
-        dto.setActivo(vehiculo.getActivo());
-        dto.setEstado(vehiculo.getEstado());
-        dto.setMarca(vehiculo.getMarca());
-        dto.setColor(vehiculo.getColor());
-        dto.setAnioModelo(vehiculo.getAnioModelo());
-        dto.setKilometraje(vehiculo.getKilometraje());
-        dto.setModelo(vehiculo.getModelo());
-        dto.setPrecio(vehiculo.getPrecio());
-        dto.setStock(vehiculo.getStock());
-        dto.setTipo(vehiculo.getTipo());
+    public VehiculoGetDTO toDTO(Vehiculo vehiculo, List<VehiculoVentaDetalleDTO> detalleVentas) {
         List<ImagenDTO> imagenesDTO = Optional.ofNullable(vehiculo.getImagenes())
                 .orElse(Collections.emptyList())
                 .stream()
                 .map(imagen -> new ImagenDTO(imagen.getId(), imagen.getNombre()))
                 .collect(Collectors.toList());
-
-        dto.setImagenes(imagenesDTO);
-        return dto;
+        return new VehiculoGetDTO(
+                vehiculo.getId(),
+                vehiculo.getMarca(),
+                vehiculo.getModelo(),
+                vehiculo.getAnioModelo(),
+                vehiculo.getPrecio(),
+                vehiculo.getStock(),
+                vehiculo.getColor(),
+                vehiculo.getTipo(),
+                vehiculo.getEstado(),
+                vehiculo.getKilometraje(),
+                imagenesDTO,
+                vehiculo.isActivo(),
+                detalleVentas
+        );
     }
 
-    public Vehiculo create(VehiculoPostDTO post) {
-        Vehiculo vehiculo = new Vehiculo();
-        vehiculo.setActivo(post.getActivo());
-        vehiculo.setAnioModelo(post.getAnioModelo());
-        vehiculo.setColor(post.getColor());
-        vehiculo.setEstado(post.getEstado());
-        vehiculo.setKilometraje(post.getKilometraje());
-        vehiculo.setMarca(post.getMarca());
-        vehiculo.setModelo(post.getModelo());
-        vehiculo.setPrecio(post.getPrecio());
-        vehiculo.setStock(post.getStock());
-        vehiculo.setTipo(post.getTipo());
-        List<String> nombresImagenes = Optional.ofNullable(post.getNombresImagenes()).orElse(Collections.emptyList());
-        for (String nombre : nombresImagenes) {
-            Imagen imagen = new Imagen();
-            imagen.setNombre(nombre);
-            vehiculo.addImagen(imagen);
-        }
-        return vehiculo;
+    public VehiculoGetDTO toDTO(Vehiculo vehiculo) {
+        List<ImagenDTO> imagenesDTO = Optional.ofNullable(vehiculo.getImagenes())
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(imagen -> new ImagenDTO(imagen.getId(), imagen.getNombre()))
+                .collect(Collectors.toList());
+        return new VehiculoGetDTO(
+                vehiculo.getId(),
+                vehiculo.getMarca(),
+                vehiculo.getModelo(),
+                vehiculo.getAnioModelo(),
+                vehiculo.getPrecio(),
+                vehiculo.getStock(),
+                vehiculo.getColor(),
+                vehiculo.getTipo(),
+                vehiculo.getEstado(),
+                vehiculo.getKilometraje(),
+                imagenesDTO,
+                vehiculo.isActivo(),
+                Collections.emptyList()
+        );
     }
 
-    public Vehiculo update(Vehiculo vehiculo, VehiculoPutDTO put) {
-        if (put.getActivo() != null) vehiculo.setActivo(put.getActivo());
-        if (put.getAnioModelo() != null) vehiculo.setAnioModelo(put.getAnioModelo());
-        if (put.getColor() != null) vehiculo.setColor(put.getColor());
-        if (put.getEstado() != null) vehiculo.setEstado(put.getEstado());
-        if (put.getKilometraje() != null) vehiculo.setKilometraje(put.getKilometraje());
-        if (put.getMarca() != null) vehiculo.setMarca(put.getMarca());
-        if (put.getModelo() != null) vehiculo.setModelo(put.getModelo());
-        if (put.getPrecio() != null) vehiculo.setPrecio(put.getPrecio());
-        if (put.getStock() != null) vehiculo.setStock(put.getStock());
-        if (put.getTipo() != null) vehiculo.setTipo(put.getTipo());
-        return vehiculo;
+    public Vehiculo toEntity(VehiculoPostDTO post) {
+        List<Imagen> imagenes = Optional.ofNullable(post.nombresImagenes())
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(nombre -> {
+                    Imagen imagen = new Imagen();
+                    imagen.setNombre(nombre);
+                    return imagen;
+                })
+                .toList();
+
+        return Vehiculo.builder()
+                .color(post.color())
+                .estado(post.estado())
+                .kilometraje(post.kilometraje())
+                .marca(post.marca())
+                .modelo(post.modelo())
+                .precio(post.precio())
+                .stock(post.stock())
+                .tipo(post.tipo())
+                .activo(true)
+                .anioModelo(post.anioModelo())
+                .imagenes(imagenes)
+                .build();
+    }
+
+    public void update(Vehiculo vehiculo, VehiculoPutDTO put) {
+        if (put.anioModelo() != null) vehiculo.setAnioModelo(put.anioModelo());
+        if (put.color() != null) vehiculo.setColor(put.color());
+        if (put.estado() != null) vehiculo.setEstado(put.estado());
+        if (put.kilometraje() != null) vehiculo.setKilometraje(put.kilometraje());
+        if (put.marca() != null) vehiculo.setMarca(put.marca());
+        if (put.modelo() != null) vehiculo.setModelo(put.modelo());
+        if (put.precio() != null) vehiculo.setPrecio(put.precio());
+        if (put.stock() != null) vehiculo.setStock(put.stock());
+        if (put.tipo() != null) vehiculo.setTipo(put.tipo());
+    }
+    public List<VehiculoGetDTO> toDTOList(List<Vehiculo> vehiculos) {
+        return vehiculos.stream().filter(Vehiculo::isActivo).map(this::toDTO).toList();
     }
 }

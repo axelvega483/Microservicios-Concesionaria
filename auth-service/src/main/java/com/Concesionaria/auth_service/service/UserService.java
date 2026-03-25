@@ -3,10 +3,14 @@ package com.Concesionaria.auth_service.service;
 import com.Concesionaria.auth_service.DTO.*;
 import com.Concesionaria.auth_service.model.User;
 import com.Concesionaria.auth_service.repository.UserRepository;
+import com.Concesionaria.auth_service.util.RolUser;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.EntityExistsException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,10 +25,13 @@ public class UserService implements IUserServicie {
 
     @Autowired
     private MapperDto mapper;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public User save(User user) {
         user.setActivo(Boolean.TRUE);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         return repo.save(user);
     }
 
@@ -32,11 +39,11 @@ public class UserService implements IUserServicie {
     @CircuitBreaker(name = "sales-service", fallbackMethod = "findByUserNoVenta")
     @Retry(name = "sales-service")
     public Optional<UserGetDTO> findById(Integer id) {
-        Optional<User> optUser = repo.findById(id).filter(User::getActivo);
+        Optional<User> optUser = repo.findById(id).filter(User::isActivo);
         if (optUser.isPresent()) {
-            UserGetDTO dto = mapper.toDTO(optUser.get());
-            List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(dto.getId());
-            dto.setVentas(ventas);
+            User user = optUser.get();
+            List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(user.getId());
+            UserGetDTO dto = mapper.toDTO(user, ventas);
             return Optional.of(dto);
         }
         return Optional.empty();
@@ -44,59 +51,39 @@ public class UserService implements IUserServicie {
 
     public Optional<UserGetDTO> findByUserNoVenta(Integer id, Throwable throwable) {
         System.err.println("Fallback ejecutado para findByUserNoVenta(): " + throwable.getMessage());
-        Optional<User> optUser = repo.findById(id).filter(User::getActivo);
+        Optional<User> optUser = repo.findById(id).filter(User::isActivo);
         if (optUser.isPresent()) {
-            UserGetDTO dto = mapper.toDTO(optUser.get());
-            dto.setVentas(Collections.emptyList());
+            User user = optUser.get();
+            UserGetDTO dto = mapper.toDTO(user);
             return Optional.of(dto);
         }
         return Optional.empty();
     }
 
     @Override
-    @CircuitBreaker(name = "sales-service", fallbackMethod = "findAllUserNoVenta")
-    @Retry(name = "sales-service")
     public List<UserGetDTO> findAll() {
-        List<User> usuarios = repo.findAll();
-        List<UserGetDTO> dtos = new ArrayList<>();
-        for (User user : usuarios) {
-            UserGetDTO dto = mapper.toDTO(user);
-            List<UserVentaDTO> ventas = venta.obtenerVentasPorUser(user.getId());
-            dto.setVentas(ventas);
-            dtos.add(dto);
-        }
-        return dtos;
+        return mapper.toDTOList(repo.findAll());
     }
 
-    public List<UserGetDTO> findAllUserNoVenta(Throwable throwable) {
-        System.err.println("Fallback ejecutado para findAllUserNoVenta(): " + throwable.getMessage());
-            List<User> usuarios = repo.findAll();
-            List<UserGetDTO> dtos = new ArrayList<>();
-            for (User user : usuarios) {
-                UserGetDTO dto = mapper.toDTO(user);
-                dto.setVentas(Collections.emptyList());
-                dtos.add(dto);
-            }
-            return dtos;
-    }
 
     @Override
     public void delete(Integer id) {
         Optional<User> userOptional = repo.findById(id);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            user.setActivo(Boolean.FALSE);
+            user.setActivo(false);
             repo.save(user);
         }
     }
 
     @Override
     public UserGetDTO crear(UserPostDTO post) {
-        if (existe(post.getDni())) {
-            throw new EntityExistsException("El Usuario ya existe");
+        if (existe(post.dni())) {
+            throw new EntityExistsException("El User ya existe");
         }
-        User usuario = mapper.create(post);
-        User saved = repo.save(usuario);
+        User user = mapper.toEntity(post);
+        user.setPassword(passwordEncoder.encode(post.password()));
+        User saved = repo.save(user);
         return mapper.toDTO(saved);
     }
 
@@ -104,20 +91,64 @@ public class UserService implements IUserServicie {
     public UserGetDTO actualizar(Integer id, UserPutDTO put) {
         User user = repo.findById(id).orElse(null);
         if (user == null) {
-            throw new EntityExistsException("El Usuario no existe");
+            throw new EntityExistsException("El User no existe");
         }
-        user = mapper.update(user, put);
+        mapper.fromUpdateDTO(user, put);
+        if (put.password() != null && !put.password().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(put.password()));
+        }
         User save = repo.save(user);
         return mapper.toDTO(save);
     }
+    @Override
+    public UserGetDTO actualizarRol(Integer id, UserRolDTO dto) {
+        System.out.println("=== ACTUALIZAR ROL ===");
+        System.out.println("ID a modificar: " + id);
+        System.out.println("Nuevo rol: " + dto.rol());
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Authentication: " + auth);
+        System.out.println("Authentication name: " + (auth != null ? auth.getName() : "null"));
+        System.out.println("Authentication authorities: " + (auth != null ? auth.getAuthorities() : "null"));
+
+        if (auth == null || !auth.isAuthenticated()) {
+            System.out.println("ERROR: No hay autenticación!");
+            throw new IllegalStateException("Usuario no autenticado");
+        }
+
+        String email = auth.getName();
+        System.out.println("Email autenticado: " + email);
+
+        if (dto.rol() == null) {
+            throw new IllegalArgumentException("El rol es obligatorio");
+        }
+
+        User usuarioLogueado = repo.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado"));
+
+        User usuario = repo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado"));
+
+        if (usuario.getRol() == RolUser.ADMIN && dto.rol() != RolUser.ADMIN) {
+            long admins = repo.countByRol(RolUser.ADMIN);
+            if (admins <= 1) {
+                throw new IllegalStateException("Debe existir al menos un ADMIN");
+            }
+        }
+
+        if (usuarioLogueado.getId().equals(id)) {
+            throw new IllegalStateException("No podés cambiar tu propio rol");
+        }
+
+        usuario.setRol(dto.rol());
+        repo.save(usuario);
+        return mapper.toDTO(usuario);
+    }
+
 
     @Override
     public Boolean existe(String dni) {
-        return repo.findByDniAndActivo(dni).isPresent();
+        return repo.existsByDniAndActivoTrue(dni);
     }
 
-    @Override
-    public Optional<User> findByCorreoAndPassword(String email, String password) {
-        return repo.findByCorreoAndPassword(email, password);
-    }
 }

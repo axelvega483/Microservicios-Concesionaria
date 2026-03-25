@@ -6,15 +6,12 @@ import com.Concesionaria.catalog_service.util.TipoVehiculo;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
@@ -62,7 +59,7 @@ public class Vehiculo implements Serializable {
     private Integer kilometraje;
 
     @Column(nullable = false)
-    private Boolean activo = true;
+    private boolean activo ;
 
     @OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Imagen> imagenes = new ArrayList<>();

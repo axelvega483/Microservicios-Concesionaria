@@ -18,5 +18,5 @@ public interface IClienteService {
 
     List<ClienteGetDTO> findAll();
 
-    void delete(Integer id);
+    ClienteGetDTO delete(Integer id);
 }

@@ -2,26 +2,23 @@ package com.Concesionaria.auth_service.DTO;
 
 import com.Concesionaria.auth_service.util.RolUser;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class UserPostDTO {
+public record UserPostDTO(
+        @NotNull
+        String nombre,
 
-    @NotNull
-    private String nombre;
+        @NotNull
+        String email,
 
-    @NotNull
-    private String email;
+        @NotNull
+        String password,
 
-    @NotNull
-    private String password;
+        @NotNull
+        String dni,
 
-    @NotNull
-    private String dni;
+        @NotNull
+        RolUser rol
+) {
 
-    @NotNull
-    private RolUser rol;
 
 }

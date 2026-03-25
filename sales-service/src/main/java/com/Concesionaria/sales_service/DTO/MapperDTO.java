@@ -9,124 +9,119 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class MapperDTO {
 
+    public VentaGetDTO toDTO(Venta venta, BigDecimal saldoRestante, List<PagosDTO> pagos) {
+        return new VentaGetDTO(
+                venta.getId(),
+                venta.getFecha(),
+                venta.getFrecuenciaPago(),
+                venta.getTotal(),
+                toDetalleDTOList(venta.getDetalleVentas()),
+                venta.getClienteId(),
+                venta.getUserId(),
+                venta.isActivo(),
+                venta.getEntrega(),
+                venta.getEstado(),
+                venta.getCuotas(),
+                saldoRestante,
+                pagos
+        );
+    }
+
     public VentaGetDTO toDTO(Venta venta, BigDecimal saldoRestante) {
-        VentaGetDTO dto = new VentaGetDTO();
-        dto.setId(venta.getId());
-        dto.setFecha(venta.getFecha());
-        dto.setFrecuenciaPago(venta.getFrecuenciaPago());
-        dto.setTotal(venta.getTotal());
-        dto.setClienteId(venta.getClienteId());
-        dto.setUserId(venta.getUserId());
-        dto.setActivo(venta.getActivo());
-        dto.setEntrega(venta.getEntrega());
-        dto.setEstado(venta.getEstado());
-        dto.setCuotas(venta.getCuotas());
-        dto.setSaldoRestante(saldoRestante);
-        dto.setDetalleVentas(toDetalleDTOList(venta.getDetalleVentas()));
-        return dto;
+        return new VentaGetDTO(
+                venta.getId(),
+                venta.getFecha(),
+                venta.getFrecuenciaPago(),
+                venta.getTotal(),
+                toDetalleDTOList(venta.getDetalleVentas()),
+                venta.getClienteId(),
+                venta.getUserId(),
+                venta.isActivo(),
+                venta.getEntrega(),
+                venta.getEstado(),
+                venta.getCuotas(),
+                saldoRestante,
+                Collections.emptyList()
+        );
     }
 
     public List<VentaDetalleDTO> toDetalleDTOList(List<DetalleVenta> detalles) {
-        if (detalles == null) return Collections.emptyList();
-
-        return detalles.stream()
+        return Optional.ofNullable(detalles)
+                .orElse(Collections.emptyList())
+                .stream()
                 .map(this::toDetalleDTO)
                 .toList();
     }
 
     public VentaDetalleDTO toDetalleDTO(DetalleVenta detalle) {
-        VentaDetalleDTO dto = new VentaDetalleDTO();
-        dto.setId(detalle.getId());
-        dto.setVehiculoId(detalle.getVehiculoId());
-        dto.setCantidad(detalle.getCantidad());
-        dto.setPrecioUnitario(detalle.getPrecioUnitario());
-        dto.setSubtotal(detalle.getPrecioUnitario()
-                .multiply(BigDecimal.valueOf(detalle.getCantidad())));
-        return dto;
+        return new VentaDetalleDTO(
+                detalle.getId(),
+                detalle.getVehiculoId(),
+                detalle.getCantidad(),
+                detalle.getPrecioUnitario(),
+                detalle.getPrecioUnitario()
+                        .multiply(BigDecimal.valueOf(detalle.getCantidad()))
+        );
     }
 
     public Venta fromPostDTO(VentaPostDTO postDTO) {
-        Venta venta = new Venta();
-        venta.setFecha(LocalDate.now());
-        venta.setFrecuenciaPago(postDTO.getFrecuenciaPago());
-        venta.setClienteId(postDTO.getClienteId());
-        venta.setUserId(postDTO.getUserId());
-        venta.setEntrega(postDTO.getEntrega());
-        venta.setCuotas(postDTO.getCuotas());
-        venta.setEstado(EstadoVenta.ACTIVO);
-        venta.setActivo(true);
+        List<DetalleVenta> detalles = postDTO.detalleVentas()
+                .stream()
+                .map(this::fromDetallePostDTO)
+                .toList();
 
-        if (postDTO.getDetalleVentas() != null) {
-            List<DetalleVenta> detalles = postDTO.getDetalleVentas().stream()
-                    .map(this::fromDetallePostDTO)
-                    .toList();
-            venta.setDetalleVentas(detalles);
-        }
-
-        return venta;
+        return Venta.builder()
+                .fecha(LocalDate.now())
+                .frecuenciaPago(postDTO.frecuenciaPago())
+                .detalleVentas(detalles)
+                .clienteId(postDTO.clienteId())
+                .userId(postDTO.userId())
+                .entrega(postDTO.entrega())
+                .cuotas(postDTO.cuotas())
+                .estado(EstadoVenta.ACTIVO)
+                .activo(true)
+                .build();
     }
-    public Venta fromPutDTO(Venta venta,VentaPutDTO put){
-        if (put.getTotal() != null) venta.setTotal(put.getTotal());
-        if (put.getFrecuenciaPago() != null) venta.setFrecuenciaPago(put.getFrecuenciaPago());
-        if (put.getClienteId() != null) venta.setClienteId(put.getClienteId());
-        if (put.getUserId() != null) venta.setUserId(put.getUserId());
-        if (put.getActivo() != null) venta.setActivo(put.getActivo());
-        if (put.getEntrega() != null) venta.setEntrega(put.getEntrega());
-        if (put.getEstado() != null) venta.setEstado(put.getEstado());
-        if (put.getCuotas() != null) venta.setCuotas(put.getCuotas());
 
-        if (put.getDetalleVentas() != null && !put.getDetalleVentas().isEmpty()) {
-            venta.getDetalleVentas().clear();
-            List<DetalleVenta> nuevosDetalles = put.getDetalleVentas().stream()
-                    .map(this::fromDetallePostDTO)
-                    .peek(detalle -> detalle.setVenta(venta))
-                    .toList();
-            venta.getDetalleVentas().addAll(nuevosDetalles);
-            venta.calcularTotal();
-        }
-        return venta;
-
-    }
 
     public DetalleVenta fromDetallePostDTO(DetalleVentaPostDTO postDTO) {
         DetalleVenta detalle = new DetalleVenta();
-        detalle.setVehiculoId(postDTO.getVehiculoId());
-        detalle.setCantidad(postDTO.getCantidad());
-        detalle.setPrecioUnitario(postDTO.getPrecioUnitario());
+        detalle.setVehiculoId(postDTO.vehiculoId());
+        detalle.setCantidad(postDTO.cantidad());
+        detalle.setPrecioUnitario(postDTO.precioUnitario());
         return detalle;
     }
 
     public UserVentaDTO toUserVentaDTO(Venta venta) {
-        UserVentaDTO dto = new UserVentaDTO();
-        dto.setId(venta.getId());
-        dto.setFecha(venta.getFecha());
-        dto.setTotal(venta.getTotal());
-        return dto;
+        return new UserVentaDTO(
+                venta.getId(),
+                venta.getFecha(),
+                venta.getTotal()
+        );
     }
-    public List<VehiculoVentaDetalleDTO> vehiculoVentaDetalleDTO(Venta venta) {
-        if (venta.getDetalleVentas() == null || venta.getDetalleVentas().isEmpty()) {
-            return Collections.emptyList();
-        }
 
-        return venta.getDetalleVentas().stream()
-                .map(detalle -> {
-                    VehiculoVentaDetalleDTO dto = new VehiculoVentaDetalleDTO();
-                    dto.setId(venta.getId()); // ID de la venta
-                    dto.setCantidad(detalle.getCantidad());
-                    dto.setPrecioUnitario(detalle.getPrecioUnitario());
-                    return dto;
-                })
+    public List<VehiculoVentaDetalleDTO> vehiculoVentaDetalleDTO(Venta venta) {
+        return Optional.ofNullable(venta.getDetalleVentas())
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(detalle -> new VehiculoVentaDetalleDTO(
+                        venta.getId(),
+                        detalle.getCantidad(),
+                        detalle.getPrecioUnitario()
+                ))
                 .toList();
     }
+
     public ClienteVentaDTO toClienteVentaDTO(Venta venta) {
-        ClienteVentaDTO dto = new ClienteVentaDTO();
-        dto.setId(venta.getId());
-        dto.setFecha(venta.getFecha());
-        dto.setTotal(venta.getTotal());
-        return dto;
+        return new ClienteVentaDTO(
+                venta.getId(),
+                venta.getFecha(),
+                venta.getTotal()
+        );
     }
 }

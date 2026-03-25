@@ -27,15 +27,15 @@ public class AuthServiceApplication {
         return args -> {
             List<UserGetDTO> usuarios = usuarioService.findAll();
             if (usuarios.isEmpty()) {
-                User usuarioADMIN = new User();
-                usuarioADMIN.setRol(RolUser.ADMIN);
-                usuarioADMIN.setNombre("ADMIN");
-                usuarioADMIN.setPassword("admin");
-                usuarioADMIN.setEmail("admin@admin.com");
-                usuarioADMIN.setDni("1234567");
+                User userADMIN = new User();
+                userADMIN.setRol(RolUser.ADMIN);
+                userADMIN.setNombre("ADMIN");
+                userADMIN.setPassword("admin");
+                userADMIN.setEmail("admin@admin.com");
+                userADMIN.setDni("1234567");
 
-                usuarioService.save(usuarioADMIN);
-                System.out.println("Usuario administrador inicializado con éxito.");
+                usuarioService.save(userADMIN);
+                System.out.println("User administrador inicializado con éxito.");
             }
         };
     }

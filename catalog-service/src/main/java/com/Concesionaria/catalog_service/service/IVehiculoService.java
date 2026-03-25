@@ -15,7 +15,7 @@ public interface IVehiculoService {
     VehiculoGetDTO createVehiculo(VehiculoPostDTO post);
 
 
-    VehiculoGetDTO updateVehiculo (Integer id, VehiculoPutDTO put);
+    VehiculoGetDTO updateVehiculo(Integer id, VehiculoPutDTO put);
 
     Optional<VehiculoGetDTO> findByIdVehiculo(Integer id);
 
@@ -30,4 +30,10 @@ public interface IVehiculoService {
     ResponseEntity<Resource> obtenerImagen(Integer vehiculoId, Integer imagenId);
 
     VehiculoGetDTO eliminarImagenVehiculo(Integer vehiculoId, Integer imagenId);
+
+    VehiculoGetDTO incrementarStock(Integer vehiculoId, Integer cantidad);
+
+    VehiculoGetDTO descontarStock(Integer vehiculoId, Integer cantidad);
+
+    Optional<VehiculoGetDTO> vehiculoId(Integer id);
 }

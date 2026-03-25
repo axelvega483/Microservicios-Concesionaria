@@ -1,24 +1,15 @@
 package com.Concesionaria.auth_service.DTO;
 
-import com.Concesionaria.auth_service.util.RolUser;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
-public class UserPutDTO {
+public record UserPutDTO(
+        String nombre,
 
-    private String nombre;
+         String email,
 
-    private String email;
+         String dni,
 
-    private String dni;
+         String password) {
 
-    private String password;
-
-    private RolUser rol;
-
-    private Boolean activo;
 
 
 }

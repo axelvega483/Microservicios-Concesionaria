@@ -5,15 +5,13 @@ import com.Concesionaria.payments_service.util.MetodoPago;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
 @Setter
@@ -47,6 +45,6 @@ public class Pagos implements Serializable {
     private EstadoPagos estado;
 
     @Column(nullable = false)
-    private Boolean activo = true;
+    private boolean activo;
 
 }

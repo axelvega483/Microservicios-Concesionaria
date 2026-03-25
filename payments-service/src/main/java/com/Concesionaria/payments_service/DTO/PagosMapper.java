@@ -3,39 +3,37 @@ package com.Concesionaria.payments_service.DTO;
 import com.Concesionaria.payments_service.model.Pagos;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 @Component
 public class PagosMapper {
 
     public PagosGetDTO toDTO(Pagos pagos) {
-        PagosGetDTO dto = new PagosGetDTO();
-        dto.setActivo(pagos.getActivo());
-        dto.setEstado(pagos.getEstado());
-        dto.setFechaPago(pagos.getFechaPago());
-        dto.setId(pagos.getId());
-        dto.setMetodoPago(pagos.getMetodoPago());
-        dto.setMonto(pagos.getMonto());
-        dto.setVentaId(pagos.getVentaId());
-
-        return dto;
+        return new PagosGetDTO(
+                pagos.getId(),
+                pagos.getFechaPago(),
+                pagos.getMetodoPago(),
+                pagos.getMonto(),
+                pagos.getEstado(),
+                pagos.isActivo(),
+                pagos.getVentaId()
+        );
     }
 
-    public Pagos update(Pagos pagos, PagosPutDTO put) {
-        if (put.getFechaPago() != null) {
-            pagos.setFechaPago(put.getFechaPago());
+    public void fromUpdateDTO(Pagos pagos, PagosPutDTO put) {
+        if (put.fechaPago() != null) {
+            pagos.setFechaPago(put.fechaPago());
         }
 
-        if (put.getMetodoPago() != null) {
-            pagos.setMetodoPago(put.getMetodoPago());
+        if (put.metodoPago() != null) {
+            pagos.setMetodoPago(put.metodoPago());
         }
 
-        if (put.getEstado() != null) {
-            pagos.setEstado(put.getEstado());
+        if (put.estado() != null) {
+            pagos.setEstado(put.estado());
         }
-
-        if (put.getActivo() != null) {
-            pagos.setActivo(put.getActivo());
-        }
-
-        return pagos;
+    }
+    public List<PagosGetDTO> toDTOList(List<Pagos> pagos) {
+        return pagos.stream().filter(Pagos::isActivo).map(this::toDTO).toList();
     }
 }

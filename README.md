@@ -45,7 +45,7 @@
 
 | Servicio | Icono | Descripción | Endpoints |
 |----------|-------|-------------|-----------|
-| **auth-service** | 🔐 | Gestión de usuarios (ADMIN-EMPLEADO) | `GET/POST/PUT/DELETE /usuario` |
+| **auth-service** | 🔐 | Gestión de users (ADMIN-EMPLEADO) | `GET/POST/PUT/DELETE /user` |
 | **catalog-service** | 🚗 | Inventario de vehículos | `GET/POST/PUT/DELETE /vehiculo` |
 | **customer-service** | 👥 | Gestión de clientes e historial | `GET/POST/PUT /cliente` |
 | **sales-service** | 💰 | Registro de ventas y generación de pagos | `GET/POST /venta` |

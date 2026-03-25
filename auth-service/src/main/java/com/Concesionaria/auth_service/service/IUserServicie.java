@@ -3,6 +3,7 @@ package com.Concesionaria.auth_service.service;
 import com.Concesionaria.auth_service.DTO.UserGetDTO;
 import com.Concesionaria.auth_service.DTO.UserPostDTO;
 import com.Concesionaria.auth_service.DTO.UserPutDTO;
+import com.Concesionaria.auth_service.DTO.UserRolDTO;
 import com.Concesionaria.auth_service.model.User;
 
 import java.util.List;
@@ -23,5 +24,5 @@ public interface IUserServicie {
 
     Boolean existe(String dni);
 
-    Optional<User> findByCorreoAndPassword(String email, String password);
+    UserGetDTO actualizarRol(Integer id, UserRolDTO dto);
 }

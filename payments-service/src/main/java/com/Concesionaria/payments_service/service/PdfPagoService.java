@@ -29,7 +29,7 @@ public class PdfPagoService {
                 return null;
             }
 
-            String pathArchivo = directory + File.separator + "ticket-pago-" + pago.getId() + ".pdf";
+            String pathArchivo = directory + File.separator + "ticket-pago-" + pago.id() + ".pdf";
             Document document = new Document(new Rectangle(220, 400), 10, 10, 10, 10);
             PdfWriter.getInstance(document, new FileOutputStream(pathArchivo));
             document.open();
@@ -47,8 +47,8 @@ public class PdfPagoService {
 
             // Fecha
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            String fechaStr = pago.getFechaPago() != null ?
-                    pago.getFechaPago().format(formatter) : "PENDIENTE";
+            String fechaStr = pago.fechaPago() != null ?
+                    pago.fechaPago().format(formatter) : "PENDIENTE";
 
             Paragraph fecha = new Paragraph(fechaStr, fontValor);
             fecha.setAlignment(Element.ALIGN_CENTER);
@@ -65,10 +65,10 @@ public class PdfPagoService {
             tabla.setSpacingBefore(5f);
             tabla.setSpacingAfter(5f);
 
-            agregarFila(tabla, "📄 ID Pago:", pago.getId().toString(), fontCampo, fontValor);
-            agregarFila(tabla, "💵 Monto:", "$" + String.format("%.2f", pago.getMonto()), fontCampo, fontValor);
-            agregarFila(tabla, "💳 Método:", pago.getMetodoPago().name(), fontCampo, fontValor);
-            agregarFila(tabla, "📊 Estado:", pago.getEstado().name(), fontCampo, fontValor);
+            agregarFila(tabla, "📄 ID Pago:", pago.id().toString(), fontCampo, fontValor);
+            agregarFila(tabla, "💵 Monto:", "$" + String.format("%.2f", pago.metodoPago()), fontCampo, fontValor);
+            agregarFila(tabla, "💳 Método:", pago.metodoPago().name(), fontCampo, fontValor);
+            agregarFila(tabla, "📊 Estado:", pago.estado().name(), fontCampo, fontValor);
 
             document.add(tabla);
             document.add(new Paragraph("────────────────────────────"));

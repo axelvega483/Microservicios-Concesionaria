@@ -9,7 +9,7 @@ public interface IVentaService {
 
     VentaGetDTO create(VentaPostDTO post);
 
-    VentaGetDTO update(Integer id, VentaPutDTO put);
+    VentaGetDTO anular(Integer id);
 
     VentaGetDTO delete(Integer id);
 

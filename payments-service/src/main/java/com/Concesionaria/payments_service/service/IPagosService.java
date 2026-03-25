@@ -25,7 +25,9 @@ public interface IPagosService {
 
     List<PagosGetDTO> findByVentaId(Integer ventaId);
 
-    List<PagosGetDTO> getPagosPorVentas(List<Integer> ventaIds);
+    List<PagosGetDTO> getPagosPorVenta(Integer ventaId);
+
+    void anularPago(Integer pagoId);
 
     BigDecimal getTotalPagado(Integer ventaId);
 
