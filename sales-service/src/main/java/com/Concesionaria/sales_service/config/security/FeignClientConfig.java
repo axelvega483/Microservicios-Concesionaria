@@ -26,10 +26,8 @@ public class FeignClientConfig {
                     template.header("Authorization", authorization);
                     log.info("✅ Token propagado a: {}", template.url());
                 } else {
-                    log.warn("⚠️ No hay token para propagar a: {}", template.url());
+                    log.warn("⚠️ No hay token para propagar");
                 }
-            } else {
-                log.debug("No hay request attributes disponibles");
             }
         };
     }

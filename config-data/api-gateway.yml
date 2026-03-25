@@ -10,6 +10,39 @@ spring:
       httpclient:
         connect-timeout: 5000
         response-timeout: 10000
+      # Agregar filtros por defecto para todos los servicios
+      default-filters:
+        - TokenRelay  # ← Propaga el token a todos los servicios
+        - PreserveHostHeader
+      routes:
+        - id: sales-service
+          uri: lb://sales-service
+          predicates:
+            - Path=/sales-service/**
+          filters:
+            - StripPrefix=1
+            - TokenRelay  # ← También específicamente aquí
+        - id: catalog-service
+          uri: lb://catalog-service
+          predicates:
+            - Path=/catalog-service/**
+          filters:
+            - StripPrefix=1
+            - TokenRelay
+        - id: payments-service
+          uri: lb://payments-service
+          predicates:
+            - Path=/payments-service/**
+          filters:
+            - StripPrefix=1
+            - TokenRelay
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/auth-service/**
+          filters:
+            - StripPrefix=1
+            - TokenRelay
 
 server:
   port: 8080

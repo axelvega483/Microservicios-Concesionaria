@@ -10,7 +10,6 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,266 +17,6 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/*
-@Service
-@RequiredArgsConstructor
-public class VentaService implements IVentaService {
-
-    @Autowired
-    private VentaRepository repo;
-
-    @Autowired
-    private MapperDTO mapper;
-
-    @Autowired
-    private PagosFeignClient pagosClient;
-
-    @Autowired
-    private CatalogFeignClient catalogClient;
-
-    @Override
-    @Transactional
-    public VentaGetDTO create(VentaPostDTO post) {
-        Venta venta = mapper.fromPostDTO(post);
-        if (venta.getDetalleVentas() != null) {
-            venta.getDetalleVentas().forEach(detalle -> detalle.setVenta(venta));
-        }
-        venta.calcularTotal();
-        if (venta.getEntrega() != null && venta.getEntrega() > venta.getTotal().doubleValue()) {
-            throw new IllegalArgumentException(String.format("La entrega de $%.2f no puede ser mayor al total de $%.2f", venta.getEntrega(), venta.getTotal().doubleValue()));
-        }
-        Venta ventaGuardada = repo.save(venta);
-        generarPagos(ventaGuardada);
-        descontarStock(ventaGuardada);
-
-        return mapper.toDTO(ventaGuardada, ventaGuardada.getTotal());
-    }
-    @CircuitBreaker(name = "payments-service", fallbackMethod = "procesarPagosFallback")
-    @Retry(name = "payments-service")
-    private void generarPagos(Venta ventaGuardada){
-        try {
-            GenerarPagosRequestDTO request = new GenerarPagosRequestDTO(
-                    ventaGuardada.getId(),
-                    ventaGuardada.getTotal(),
-                    ventaGuardada.getEntrega(),
-                    ventaGuardada.getFrecuenciaPago(),
-                    ventaGuardada.getCuotas()
-            );
-            pagosClient.generarPagos(request);
-        } catch (Exception e) {
-            System.err.println("Venta creada pero error generando pagos: " + e.getMessage());
-        }
-    }
-    @CircuitBreaker(name = "catalog-service", fallbackMethod = "descontarStockFallback")
-    @Retry(name = "catalog-service")
-    private void descontarStock(Venta ventaGuardada) {
-        for(DetalleVenta detalle : ventaGuardada.getDetalleVentas()){
-            VehiculoDTO vehiculo = catalogClient.getVehiculoById(detalle.getVehiculoId());
-            catalogClient.descontarStock(detalle.getVehiculoId(), detalle.getCantidad());
-        }
-
-    }
-    @Override
-    @Transactional
-    public VentaGetDTO anular(Integer id) {
-        Venta venta = repo.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Venta no encontrada con ID: " + id));
-
-        if (venta.getEstado() == EstadoVenta.ANULADA) {
-            throw new IllegalStateException("La venta ya se encuentra anulada");
-        }
-        if (venta.getEstado() == EstadoVenta.FINALIZADO) {
-            throw new IllegalStateException("No se puede anular una venta ya finalizada");
-        }
-        procesarPagos(venta);
-
-        procesarVehiculos(venta);
-
-        venta.setEstado(EstadoVenta.ANULADA);
-
-        Venta ventaActualizada = repo.save(venta);
-
-        System.out.println("✅ Venta anulada exitosamente - ID: " + id);
-        return construirDTOConPagos(ventaActualizada);
-    }
-
-    @CircuitBreaker(name = "payments-service", fallbackMethod = "procesarPagosFallback")
-    @Retry(name = "payments-service")
-    private void procesarPagos(Venta venta) {
-        System.out.println("=== PROCESANDO PAGOS ===");
-        List<PagosDTO> pagos = pagosClient.getPagosPorVenta(venta.getId());
-        boolean hayPagosEfectuados = pagos != null && pagos.stream()
-                .anyMatch(pago -> pago.estado() == EstadoPagos.PAGADO);
-
-        if (hayPagosEfectuados) {
-            throw new IllegalStateException("No se puede anular la venta porque ya tiene pagos efectuados");
-        }
-        if (pagos != null && !pagos.isEmpty()) {
-            for (PagosDTO pago : pagos) {
-                pagosClient.anularPago(pago.id());
-                System.out.println("  ✅ Pago eliminado: " + pago.id());
-            }
-        } else {
-            System.out.println("  ℹ️ No hay pagos asociados");
-        }
-        System.out.println("✅ Pagos procesados correctamente");
-    }
-
-    @CircuitBreaker(name = "catalog-service", fallbackMethod = "procesarVehiculosFallback")
-    @Retry(name = "catalog-service")
-    private void procesarVehiculos(Venta venta) {
-        System.out.println("=== RESTAURANDO STOCK ===");
-        if (venta.getDetalleVentas() == null || venta.getDetalleVentas().isEmpty()) {
-            System.out.println("  ℹ️ No hay vehículos para restaurar stock");
-            return;
-        }
-        for (DetalleVenta detalle : venta.getDetalleVentas()) {
-            VehiculoDTO vehiculo = catalogClient.getVehiculoById(detalle.getVehiculoId());
-
-            catalogClient.incrementarStock(detalle.getVehiculoId(), detalle.getCantidad());
-
-            System.out.println("  ✅ Vehículo ID: " + detalle.getVehiculoId() +
-                    ", Cantidad: " + detalle.getCantidad() +
-                    ", Stock: " + vehiculo.stock() + " → " + (vehiculo.stock() + detalle.getCantidad()));
-        }
-        System.out.println("✅ Stock restaurado correctamente");
-    }
-
-    private void procesarPagosFallback(Venta venta, Throwable throwable) {
-        System.err.println("⚠️ FALLBACK PAGOS - Error: " + throwable.getMessage());
-        throw new RuntimeException("No se pudo procesar la anulación de pagos. Venta no anulada.", throwable);
-    }
-
-    private void procesarVehiculosFallback(Venta venta, Throwable throwable) {
-        System.err.println("⚠️ FALLBACK STOCK - Error al restaurar stock: " + throwable.getMessage());
-
-        System.out.println("Error al restaurar stock: " + throwable.getMessage());
-        System.out.println("⚠️ Advertencia: La venta se anulará pero el stock NO fue restaurado");
-
-    }
-
-    @Override
-    @Transactional
-    public VentaGetDTO delete(Integer id) {
-        Venta venta = repo.findById(id).orElseThrow(() ->
-                new RuntimeException("Venta no encontrada con ID: " + id));
-        venta.setActivo(false);
-        Venta ventaEliminada = repo.save(venta);
-        return construirDTOConPagos(ventaEliminada);
-    }
-
-    @Override
-    @CircuitBreaker(name = "pagos-service", fallbackMethod = "findByIdVentaNoPago")
-    @Retry(name = "pagos-service")
-    public VentaGetDTO findById(Integer id) {
-        Venta venta = repo.findById(id).orElseThrow(() ->
-                new RuntimeException("Venta no encontrada con ID: " + id));
-        List<PagosDTO> pagos = pagosClient.getPagosPorVenta(id);
-        BigDecimal totalPagado = calcularSumaPagosPagados(pagos);
-        BigDecimal saldoRestante = venta.getTotal().subtract(totalPagado);
-        actualizarEstadoVenta(venta, totalPagado);
-        return mapper.toDTO(venta, saldoRestante);
-    }
-
-    public VentaGetDTO findByIdVentaNoPago(Integer id, Throwable throwable) {
-        System.out.println(throwable.getMessage());
-        Venta venta = repo.findById(id).orElseThrow(() ->
-                new RuntimeException("Venta no encontrada"));
-        return mapper.toDTO(venta, venta.getTotal());
-    }
-
-    @Override
-    @CircuitBreaker(name = "pagos-service", fallbackMethod = "findAllVentasNoPago")
-    @Retry(name = "pagos-service")
-    public List<VentaGetDTO> findAll() {
-        List<Venta> ventas = repo.findByActivoTrue();
-        List<Integer> ids = ventas.stream().map(Venta::getId).toList();
-        List<PagosDTO> pagosList = pagosClient.getPagosPorVentas(ids);
-        return ventas.stream()
-                .map(venta -> {
-                    List<PagosDTO> pagos = pagosList.stream()
-                            .filter(p -> p.ventaId().equals(venta.getId()))
-                            .toList();
-                    BigDecimal totalPagado = calcularSumaPagosPagados(pagos);
-                    BigDecimal saldoRestante = venta.getTotal().subtract(totalPagado);
-                    actualizarEstadoVenta(venta, totalPagado);
-                    return mapper.toDTO(venta, saldoRestante);
-                })
-                .toList();
-    }
-
-    public List<VentaGetDTO> findAllVentasNoPago(Throwable throwable) {
-        System.out.println(throwable.getMessage());
-        return repo.findByActivoTrue()
-                .stream()
-                .map(venta -> {
-                    return mapper.toDTO(venta, venta.getTotal());
-                })
-                .toList();
-    }
-
-    private VentaGetDTO construirDTOConPagos(Venta venta) {
-        try {
-            List<PagosDTO> pagos = pagosClient.getPagosPorVenta(venta.getId());
-            BigDecimal totalPagado = calcularSumaPagosPagados(pagos);
-            BigDecimal saldoRestante = venta.getTotal().subtract(totalPagado);
-            return mapper.toDTO(venta, saldoRestante);
-        } catch (Exception e) {
-            return mapper.toDTO(venta, venta.getTotal());
-        }
-    }
-    private void actualizarEstadoVenta(Venta venta, BigDecimal totalPagado) {
-
-        if (venta.getTotal().subtract(totalPagado).compareTo(BigDecimal.ZERO) <= 0) {
-            venta.setEstado(EstadoVenta.FINALIZADO);
-        } else {
-            venta.setEstado(EstadoVenta.ACTIVO);
-        }
-
-        repo.save(venta);
-    }
-
-    private BigDecimal calcularSumaPagosPagados(List<PagosDTO> pagos) {
-        return pagos.stream()
-                .filter(p -> p.estado().equals(EstadoPagos.PAGADO))
-                .map(PagosDTO::monto)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-
-    @Override
-    public List<VehiculoVentaDetalleDTO> obtenerVentasPorVehiculo(Integer vehiculoId) {
-        return repo.findByDetalleVentas_VehiculoId(vehiculoId).stream()
-                .flatMap(venta -> mapper.vehiculoVentaDetalleDTO(venta).stream())
-                .toList();
-    }
-
-    @Override
-    public List<UserVentaDTO> obtenerVentasPorUser(Integer userId) {
-        return repo.findByUserId(userId)
-                .stream()
-                .map(mapper::toUserVentaDTO)
-                .toList();
-    }
-
-    @Override
-    public List<ClienteVentaDTO> obtenerVentasPorCliente(Integer clienteId) {
-        return repo.findByClienteId(clienteId)
-                .stream()
-                .map(mapper::toClienteVentaDTO)
-                .toList();
-    }
-
-    @Transactional
-    public void actualizarSaldo(Integer ventaId, BigDecimal montoPagado) {
-        Venta venta = repo.findById(ventaId)
-                .orElseThrow(() -> new RuntimeException("Venta no encontrada con ID: " + ventaId));
-
-        venta.actualizarSaldo(montoPagado);
-        repo.save(venta);
-    }
-
-}*/
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -567,7 +306,7 @@ public class VentaService implements IVentaService {
             BigDecimal totalPagado = calcularSumaPagosPagados(pagos);
             BigDecimal saldoRestante = venta.getTotal().subtract(totalPagado);
             actualizarEstadoVenta(venta, totalPagado);
-            return mapper.toDTO(venta, saldoRestante);
+            return mapper.toDTO(venta, saldoRestante,pagos);
         } catch (Exception e) {
             log.warn("Error obteniendo pagos para venta {}: {}", id, e.getMessage());
             return mapper.toDTO(venta, venta.getTotal());
@@ -583,46 +322,13 @@ public class VentaService implements IVentaService {
     }
 
     @Override
-    @CircuitBreaker(name = "payments-service", fallbackMethod = "findAllVentasFallback")
-    @Retry(name = "payments-service")
     public List<VentaGetDTO> findAll() {
-        log.debug("Obteniendo todas las ventas activas con pagos");
-
-        List<Venta> ventas = repo.findByActivoTrue();
-        if (ventas.isEmpty()) {
-            return List.of();
-        }
-
-        List<Integer> ids = ventas.stream().map(Venta::getId).collect(Collectors.toList());
-
-        try {
-            List<PagosDTO> pagosList = pagosClient.getPagosPorVentas(ids);
-
-            return ventas.stream()
-                    .map(venta -> {
-                        List<PagosDTO> pagos = pagosList.stream()
-                                .filter(p -> p.ventaId().equals(venta.getId()))
-                                .collect(Collectors.toList());
-                        BigDecimal totalPagado = calcularSumaPagosPagados(pagos);
-                        BigDecimal saldoRestante = venta.getTotal().subtract(totalPagado);
-                        actualizarEstadoVenta(venta, totalPagado);
-                        return mapper.toDTO(venta, saldoRestante);
-                    })
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            log.warn("Error obteniendo pagos para lista de ventas: {}", e.getMessage());
-            return findAllVentasFallback(e);
-        }
-    }
-
-    public List<VentaGetDTO> findAllVentasFallback(Throwable throwable) {
-        log.warn("Fallback findAll(): {}", throwable != null ? throwable.getMessage() : "Unknown error");
-
         return repo.findByActivoTrue()
                 .stream()
                 .map(venta -> mapper.toDTO(venta, venta.getTotal()))
                 .collect(Collectors.toList());
     }
+
 
     private VentaGetDTO construirDTOConPagos(Venta venta) {
         try {

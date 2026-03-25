@@ -36,7 +36,7 @@ public class SecurityConfig {
                         // CUALQUIER OTRA RUTA requiere autenticación
                         .anyExchange().authenticated()
                 )
-                // Agregar el filtro JWT antes de la autenticación
+                // Agregar el filtro JWT ANTES de la autenticación
                 .addFilterBefore(jwtTokenValidator, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }

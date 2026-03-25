@@ -6,8 +6,10 @@ import com.Concesionaria.payments_service.repository.PagosRepository;
 import com.Concesionaria.payments_service.util.EstadoPagos;
 import com.Concesionaria.payments_service.util.FrecuenciaPago;
 import com.Concesionaria.payments_service.util.MetodoPago;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -18,6 +20,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PagosService implements IPagosService {
@@ -173,9 +178,17 @@ public class PagosService implements IPagosService {
 
     @Override
     public void anularPago(Integer pagoId) {
+        log.info("Anulando pago ID: {}", pagoId);
+
         Pagos pagos = repo.findById(pagoId)
-                .orElseThrow(() -> new RuntimeException("Pago no encontrado con ID: " + pagoId));
-        repo.delete(pagos);
+                .orElseThrow(() -> new EntityNotFoundException("Pago no encontrado con ID: " + pagoId));
+
+        // Soft delete - marcar como inactivo
+        pagos.setActivo(false);
+        pagos.setEstado(EstadoPagos.ANULADO);
+
+        repo.save(pagos);
+        log.info("Pago {} anulado exitosamente", pagoId);
     }
 
     // ========== MÉTODOS AUXILIARES ==========

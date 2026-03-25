@@ -6,7 +6,9 @@ import com.Concesionaria.payments_service.DTO.PagosPutDTO;
 import com.Concesionaria.payments_service.service.IPagosService;
 import com.Concesionaria.payments_service.service.PdfPagoService;
 import com.Concesionaria.payments_service.util.MetodoPago;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -17,8 +19,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @CrossOrigin("*")
@@ -80,10 +85,15 @@ public class PagoController {
         return ResponseEntity.ok(pagos);
     }
 
-    @PutMapping("/payments/{pagoId}/anular")
-    public ResponseEntity<?> anularPago(@PathVariable Integer pagoId) {
+    @PutMapping("/{pagoId}/anular")
+    public ResponseEntity<?> anularPago(@PathVariable Integer pagoId, HttpServletRequest request) {
+        log.info("=== ANULAR PAGO ===");
+        log.info("Pago ID: {}", pagoId);
+        log.info("Headers: {}", Collections.list(request.getHeaderNames()).stream()
+                .collect(Collectors.toMap(h -> h, request::getHeader)));
+
         pagosService.anularPago(pagoId);
-        return new ResponseEntity<>("Pagos anulados", HttpStatus.OK);
+        return ResponseEntity.ok("Pago anulado correctamente");
     }
 
 
