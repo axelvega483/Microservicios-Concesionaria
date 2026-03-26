@@ -65,13 +65,6 @@ public class PagoController {
     }
 
 
-    @PutMapping("{id}")
-    public ResponseEntity<?> actualizarPago(@PathVariable Integer id, @RequestBody PagosPutDTO putDTO) {
-        PagosGetDTO pagoActualizado = pagosService.update(id, putDTO);
-        return new ResponseEntity<>(pagoActualizado, HttpStatus.OK);
-    }
-
-
     @DeleteMapping("{id}")
     public ResponseEntity<String> cancelarPago(@PathVariable Integer id) {
         pagosService.delete(id);

@@ -5,16 +5,10 @@
 <p align="center">
   <b>Sistema backend distribuido para administración integral de una concesionaria de vehículos</b>
   <br>
-  <em>Desarrollado con Spring Boot • MySQL/PostgreSQL • OpenAPI 3</em>
+  <em>Desarrollado con Spring Boot • MySQL/PostgreSQL</em>
 </p>
 
 <p align="center">
-  <a href="http://localhost:8080/swagger-ui/index.html">
-    <img src="https://img.shields.io/badge/Documentación-SwaggerUI-brightgreen?style=for-the-badge&logo=swagger" alt="Swagger UI">
-  </a>
-  <a href="http://localhost:8080/v3/api-docs">
-    <img src="https://img.shields.io/badge/API-OpenAPI3-orange?style=for-the-badge&logo=openapi-initiative" alt="OpenAPI 3">
-  </a>
   <img src="https://img.shields.io/badge/Java-17-blue?style=for-the-badge&logo=openjdk" alt="Java 17">
   <img src="https://img.shields.io/badge/Spring_Boot-3.4.5-brightgreen?style=for-the-badge&logo=springboot" alt="Spring Boot">
 </p>
@@ -91,17 +85,6 @@
 
 ---
 
-## 📄 Documentación Técnica
-
-<div align="center">
-
-| Recurso | Enlace | Descripción |
-|---------|--------|-------------|
-| **📖 Swagger UI** | [Swagger](http://localhost:8080/swagger-ui/index.html) | Documentación interactiva |
-</div>
-
----
-
 ## ⚙️ Requerimientos No Funcionales
 
 <div align="center">
@@ -118,11 +101,63 @@
 
 ---
 
+## 📋 Lo que se agregó / mejoró
+
+### 🏗️ **Arquitectura**
+- ✅ **Migración de monolito a microservicios** – Separación en 7 servicios independientes
+- ✅ **Service Discovery** con Netflix Eureka
+- ✅ **API Gateway** con Spring Cloud Gateway (único punto de entrada)
+- ✅ **Configuración centralizada** con Spring Cloud Config Server + Git
+- ✅ **Balanceo de carga** integrado en Feign Clients
+
+### 🔧 **Tecnologías agregadas**
+- ✅ **Spring Cloud Gateway** – Enrutamiento y filtros (TokenRelay)
+- ✅ **Netflix Eureka** – Registro y descubrimiento de servicios
+- ✅ **Spring Cloud Config Server** – Configuración externa versionada
+- ✅ **Resilience4J** – Circuit Breaker y Retry para tolerancia a fallos
+- ✅ **Feign Clients** – Comunicación síncrona declarativa entre servicios
+
+### 🔐 **Seguridad**
+- ✅ **Propagación de JWT** con `TokenRelay` desde Gateway
+- ✅ **Validación de token en cada servicio** – Cada microservicio valida por su cuenta
+- ✅ **Filtro JWT personalizado** en Gateway (`JwtTokenValidator`)
+
+### 📊 **Gestión de ventas y pagos**
+- ✅ **Generación automática de pagos** al crear una venta (cuotas o pago único)
+- ✅ **Anulación de ventas** con restauración de stock y anulación de pagos
+- ✅ **Soft delete** – Trazabilidad completa (ventas anuladas siguen visibles, pagos se marcan inactivos)
+- ✅ **Actualización automática de saldo** al confirmar pagos
+
+### 📦 **DTOs**
+- ✅ **DTOs específicos por servicio** – Separación clara entre `VehiculoDTO` (comunicación) y `VehiculoVentaDetalleDTO` (respuestas externas)
+- ✅ **Evita mezcla de DTOs** – Solucionado error de deserialización por campos como `estado: "NUEVO"` vs `EstadoVenta`
+
+### 🧩 **Servicios**
+- ✅ **7 microservicios independientes** con sus propias bases de datos
+- ✅ **Comunicación sincrónica** vía Feign con balanceo de carga
+- ✅ **Tolerancia a fallos** – Circuit Breaker en llamadas críticas
+- ✅ **README actualizado** con badges, tablas y estructura profesional
+
+---
+
+## 📌 **Comparativa rápida**
+
+| Aspecto | Monolito | Microservicios |
+|---------|----------|----------------|
+| **Despliegue** | Único | Independiente por servicio |
+| **Escalabilidad** | Vertical | Horizontal por servicio |
+| **Configuración** | Archivos locales | Config Server + Git |
+| **Descubrimiento** | No aplica | Eureka |
+| **Enrutamiento** | No aplica | Gateway |
+| **Tolerancia a fallos** | Manual | Resilience4J |
+| **Comunicación** | Interna (mismo proceso) | Feign + HTTP |
+| **Seguridad** | JWT en un solo lugar | TokenRelay + validación por servicio |
+
+---
+
 <div align="center">
 
 ## 🚀 ¿Listo para Comenzar?
-
-[**📖 Ir a la Documentación Interactiva**](http://localhost:8080/swagger-ui/index.html) • 
 
 **⭐ ¡No olvides darle una estrella al repo si te fue útil!**
 

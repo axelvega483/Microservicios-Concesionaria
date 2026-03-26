@@ -10,9 +10,8 @@ spring:
       httpclient:
         connect-timeout: 5000
         response-timeout: 10000
-      # Agregar filtros por defecto para todos los servicios
       default-filters:
-        - TokenRelay  # ← Propaga el token a todos los servicios
+        - TokenRelay
         - PreserveHostHeader
       routes:
         - id: sales-service
@@ -21,7 +20,7 @@ spring:
             - Path=/sales-service/**
           filters:
             - StripPrefix=1
-            - TokenRelay  # ← También específicamente aquí
+            - TokenRelay
         - id: catalog-service
           uri: lb://catalog-service
           predicates:
@@ -58,3 +57,11 @@ logging:
   level:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.cloud.loadbalancer: DEBUG
+
+# Configuraciones JWT
+security:
+  jwt:
+    private:
+      key: ${PRIVATE_KEY}
+    user:
+      generation: ${USER_GENERATOR}

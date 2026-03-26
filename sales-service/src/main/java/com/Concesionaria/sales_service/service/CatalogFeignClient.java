@@ -16,9 +16,9 @@ public interface CatalogFeignClient {
     VehiculoDTO getVehiculoById(@PathVariable("vehiculoId") Integer vehiculoId);
 
     @PutMapping("/catalog/{vehiculoId}/incrementar-stock")
-    VehiculoVentaDetalleDTO incrementarStock(@PathVariable("vehiculoId") Integer vehiculoId,
+    VehiculoDTO incrementarStock(@PathVariable("vehiculoId") Integer vehiculoId,
                                              @RequestParam("cantidad") Integer cantidad);
     @PutMapping("/catalog/{vehiculoId}/descontar-stock")
-    VehiculoVentaDetalleDTO descontarStock(@PathVariable("vehiculoId") Integer vehiculoId,
+    VehiculoDTO descontarStock(@PathVariable("vehiculoId") Integer vehiculoId,
                                              @RequestParam("cantidad") Integer cantidad);
 }

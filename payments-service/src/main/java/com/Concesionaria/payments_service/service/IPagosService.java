@@ -15,7 +15,6 @@ public interface IPagosService {
 
     List<PagosGetDTO> findAll();
 
-    PagosGetDTO update(Integer id, PagosPutDTO put);
 
     PagosGetDTO delete(Integer id);
 

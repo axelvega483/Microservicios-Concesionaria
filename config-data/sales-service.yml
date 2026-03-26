@@ -31,3 +31,11 @@ eureka:
   instance:
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
+
+# Configuraciones JWT
+security:
+  jwt:
+    private:
+      key: ${PRIVATE_KEY}
+    user:
+      generation: ${USER_GENERATOR}

@@ -50,27 +50,17 @@ public class VentaService implements IVentaService {
         if (venta.getDetalleVentas() != null) {
             venta.getDetalleVentas().forEach(detalle -> detalle.setVenta(venta));
         }
-
-        // 3. Calcular total
         venta.calcularTotal();
-
-        // 4. Validar entrega
         if (venta.getEntrega() != null && venta.getEntrega().compareTo(venta.getTotal()) > 0) {
             throw new IllegalArgumentException(
                     String.format("La entrega de $%.2f no puede ser mayor al total de $%.2f",
                             venta.getEntrega(), venta.getTotal())
             );
         }
-
-        // 5. Guardar venta
         Venta ventaGuardada = repo.save(venta);
         log.info("Venta creada con ID: {}", ventaGuardada.getId());
-
         try {
-            // 6. Descontar stock (operación crítica)
             descontarStock(ventaGuardada);
-
-            // 7. Generar pagos (operación no crítica para la creación)
             generarPagos(ventaGuardada);
 
         } catch (Exception e) {
@@ -129,7 +119,6 @@ public class VentaService implements IVentaService {
 
     private void generarPagosFallback(Venta ventaGuardada, Throwable throwable) {
         log.warn("Fallback generando pagos para venta {}: {}", ventaGuardada.getId(), throwable.getMessage());
-        // No lanzamos excepción, solo logueamos porque los pagos se pueden generar después
         log.info("Venta {} creada pero pagos pendientes de generación", ventaGuardada.getId());
     }
 
@@ -160,7 +149,6 @@ public class VentaService implements IVentaService {
         Venta venta = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Venta no encontrada con ID: " + id));
 
-        // Validaciones previas
         if (venta.getEstado() == EstadoVenta.ANULADA) {
             throw new IllegalStateException("La venta ya se encuentra anulada");
         }
@@ -168,20 +156,16 @@ public class VentaService implements IVentaService {
             throw new IllegalStateException("No se puede anular una venta ya finalizada");
         }
 
-        // Variable para tracking de operaciones completadas
         boolean pagosAnulados = false;
         boolean stockRestaurado = false;
 
         try {
-            // 1. Anular pagos (operación compensable)
             anularPagos(venta);
             pagosAnulados = true;
 
-            // 2. Restaurar stock (operación compensable)
             restaurarStock(venta);
             stockRestaurado = true;
 
-            // 3. Actualizar estado
             venta.setEstado(EstadoVenta.ANULADA);
             Venta ventaActualizada = repo.save(venta);
 
@@ -191,7 +175,6 @@ public class VentaService implements IVentaService {
         } catch (Exception e) {
             log.error("Error anulando venta {}: {}", id, e.getMessage());
 
-            // Intentar compensar operaciones completadas
             if (pagosAnulados && !stockRestaurado) {
                 log.warn("Intentando revertir anulación de pagos para venta {}", id);
                 try {
@@ -211,8 +194,6 @@ public class VentaService implements IVentaService {
         log.info("Procesando anulación de pagos para venta {}", venta.getId());
 
         List<PagosDTO> pagos = pagosClient.getPagosPorVenta(venta.getId());
-
-        // Verificar si hay pagos efectuados
         boolean hayPagosEfectuados = pagos != null && pagos.stream()
                 .anyMatch(pago -> pago.estado() == EstadoPagos.PAGADO);
 
@@ -220,7 +201,6 @@ public class VentaService implements IVentaService {
             throw new IllegalStateException("No se puede anular la venta porque ya tiene pagos efectuados");
         }
 
-        // Anular pagos pendientes
         if (pagos != null && !pagos.isEmpty()) {
             for (PagosDTO pago : pagos) {
                 pagosClient.anularPago(pago.id());
@@ -273,7 +253,6 @@ public class VentaService implements IVentaService {
     private void restaurarStockFallback(Venta venta, Throwable throwable) {
         log.error("FALLBACK - Error al restaurar stock para venta {}: {}",
                 venta.getId(), throwable.getMessage());
-        // No lanzamos excepción para no romper la anulación, pero logueamos el error
         log.warn("⚠️ Advertencia: La venta se anuló pero el stock NO fue restaurado correctamente");
     }
 

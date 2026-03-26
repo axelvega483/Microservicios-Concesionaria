@@ -154,17 +154,6 @@ public class PagosService implements IPagosService {
 
     @Override
     @Transactional
-    public PagosGetDTO update(Integer id, PagosPutDTO putDTO) {
-        Pagos pago = repo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Pago no encontrado con ID: " + id));
-
-        mapper.fromUpdateDTO(pago, putDTO);
-        Pagos saved = repo.save(pago);
-        return mapper.toDTO(saved);
-    }
-
-    @Override
-    @Transactional
     public PagosGetDTO delete(Integer id) {
         Pagos pago = repo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pago no encontrado con ID: " + id));
@@ -183,7 +172,6 @@ public class PagosService implements IPagosService {
         Pagos pagos = repo.findById(pagoId)
                 .orElseThrow(() -> new EntityNotFoundException("Pago no encontrado con ID: " + pagoId));
 
-        // Soft delete - marcar como inactivo
         pagos.setActivo(false);
         pagos.setEstado(EstadoPagos.ANULADO);
 

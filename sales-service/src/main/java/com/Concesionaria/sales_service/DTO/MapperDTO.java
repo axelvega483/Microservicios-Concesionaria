@@ -101,7 +101,8 @@ public class MapperDTO {
         return new UserVentaDTO(
                 venta.getId(),
                 venta.getFecha(),
-                venta.getTotal()
+                venta.getTotal(),
+                venta.getEstado()
         );
     }
 
@@ -112,7 +113,8 @@ public class MapperDTO {
                 .map(detalle -> new VehiculoVentaDetalleDTO(
                         venta.getId(),
                         detalle.getCantidad(),
-                        detalle.getPrecioUnitario()
+                        detalle.getPrecioUnitario(),
+                        detalle.getVenta().getEstado()
                 ))
                 .toList();
     }
@@ -121,7 +123,8 @@ public class MapperDTO {
         return new ClienteVentaDTO(
                 venta.getId(),
                 venta.getFecha(),
-                venta.getTotal()
+                venta.getTotal(),
+                venta.getEstado()
         );
     }
 }

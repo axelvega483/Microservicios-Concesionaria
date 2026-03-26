@@ -11,7 +11,6 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
-
     private final JwtTokenValidator jwtTokenValidator;
 
     public SecurityConfig(JwtTokenValidator jwtTokenValidator) {
@@ -23,20 +22,15 @@ public class SecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
-                        // PUBLICO
                         .pathMatchers("/auth-service/auth/**").permitAll()
 
-                        // RUTAS PROTEGIDAS (requieren autenticación)
                         .pathMatchers("/customer-service/**").authenticated()
                         .pathMatchers("/catalog-service/**").authenticated()
                         .pathMatchers("/sales-service/**").authenticated()
                         .pathMatchers("/auth-service/user/**").authenticated()
                         .pathMatchers("/payments-service/**").authenticated()
-
-                        // CUALQUIER OTRA RUTA requiere autenticación
                         .anyExchange().authenticated()
                 )
-                // Agregar el filtro JWT ANTES de la autenticación
                 .addFilterBefore(jwtTokenValidator, SecurityWebFiltersOrder.AUTHENTICATION)
                 .build();
     }
