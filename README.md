@@ -130,7 +130,7 @@
 
 ### 📦 **DTOs**
 - ✅ **DTOs específicos por servicio** – Separación clara entre `VehiculoDTO` (comunicación) y `VehiculoVentaDetalleDTO` (respuestas externas)
-- ✅ **Evita mezcla de DTOs** – Solucionado error de deserialización por campos como `estado: "NUEVO"` vs `EstadoVenta`
+
 
 ### 🧩 **Servicios**
 - ✅ **7 microservicios independientes** con sus propias bases de datos
