@@ -13,35 +13,6 @@ spring:
       default-filters:
         - TokenRelay
         - PreserveHostHeader
-      routes:
-        - id: sales-service
-          uri: lb://sales-service
-          predicates:
-            - Path=/sales-service/**
-          filters:
-            - StripPrefix=1
-            - TokenRelay
-        - id: catalog-service
-          uri: lb://catalog-service
-          predicates:
-            - Path=/catalog-service/**
-          filters:
-            - StripPrefix=1
-            - TokenRelay
-        - id: payments-service
-          uri: lb://payments-service
-          predicates:
-            - Path=/payments-service/**
-          filters:
-            - StripPrefix=1
-            - TokenRelay
-        - id: auth-service
-          uri: lb://auth-service
-          predicates:
-            - Path=/auth-service/**
-          filters:
-            - StripPrefix=1
-            - TokenRelay
 
 server:
   port: 8080
@@ -58,7 +29,6 @@ logging:
     org.springframework.cloud.gateway: DEBUG
     org.springframework.cloud.loadbalancer: DEBUG
 
-# Configuraciones JWT
 security:
   jwt:
     private:
