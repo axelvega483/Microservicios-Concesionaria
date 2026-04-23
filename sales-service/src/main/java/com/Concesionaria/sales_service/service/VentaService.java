@@ -75,7 +75,7 @@ public class VentaService implements IVentaService {
             log.warn("Venta creada pero con problemas en servicios auxiliares");
         }
 
-        return mapper.toDTO(ventaGuardada, ventaGuardada.getTotal());
+        return mapper.toDTOS(ventaGuardada);
     }
 
     private void validarStockDisponible(VentaPostDTO post) {
@@ -288,7 +288,7 @@ public class VentaService implements IVentaService {
             return mapper.toDTO(venta, saldoRestante,pagos);
         } catch (Exception e) {
             log.warn("Error obteniendo pagos para venta {}: {}", id, e.getMessage());
-            return mapper.toDTO(venta, venta.getTotal());
+            return mapper.toDTOS(venta);
         }
     }
 
@@ -297,14 +297,14 @@ public class VentaService implements IVentaService {
 
         Venta venta = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Venta no encontrada"));
-        return mapper.toDTO(venta, venta.getTotal());
+        return mapper.toDTOS(venta);
     }
 
     @Override
     public List<VentaGetDTO> findAll() {
         return repo.findByActivoTrue()
                 .stream()
-                .map(venta -> mapper.toDTO(venta, venta.getTotal()))
+                .map(venta -> mapper.toDTOS(venta))
                 .collect(Collectors.toList());
     }
 
@@ -314,10 +314,10 @@ public class VentaService implements IVentaService {
             List<PagosDTO> pagos = pagosClient.getPagosPorVenta(venta.getId());
             BigDecimal totalPagado = calcularSumaPagosPagados(pagos);
             BigDecimal saldoRestante = venta.getTotal().subtract(totalPagado);
-            return mapper.toDTO(venta, saldoRestante);
+            return mapper.toDTO(venta, saldoRestante,pagos);
         } catch (Exception e) {
             log.warn("Error construyendo DTO con pagos para venta {}: {}", venta.getId(), e.getMessage());
-            return mapper.toDTO(venta, venta.getTotal());
+            return mapper.toDTOS(venta);
         }
     }
 

@@ -13,9 +13,6 @@ public interface PagosFeignClient {
     @GetMapping("/payments/venta/{ventaId}")
     List<PagosDTO> getPagosPorVenta(@PathVariable Integer ventaId);
 
-    @GetMapping("/payments/ventas")
-    List<PagosDTO> getPagosPorVentas(@RequestParam List<Integer> ventaIds);
-
     @PostMapping("/payments/generar")
     List<PagosDTO> generarPagos(@RequestBody GenerarPagosRequestDTO request);
 

@@ -32,7 +32,7 @@ public class MapperDTO {
         );
     }
 
-    public VentaGetDTO toDTO(Venta venta, BigDecimal saldoRestante) {
+    public VentaGetDTO toDTOS(Venta venta) {
         return new VentaGetDTO(
                 venta.getId(),
                 venta.getFecha(),
@@ -45,7 +45,7 @@ public class MapperDTO {
                 venta.getEntrega(),
                 venta.getEstado(),
                 venta.getCuotas(),
-                saldoRestante,
+                null,
                 Collections.emptyList()
         );
     }
